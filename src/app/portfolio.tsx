@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: Colors.accentSoft,
+    backgroundColor: Colors.brownSoft,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',

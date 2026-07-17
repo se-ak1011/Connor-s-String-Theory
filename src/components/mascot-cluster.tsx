@@ -1,8 +1,19 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, type Href } from 'expo-router';
 import { Image, type ImageProps } from 'expo-image';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useEffect } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
@@ -15,6 +26,10 @@ import { Colors, Radius, Spacing } from '@/constants/theme';
  *
  * `mascotSource` falls back to a paw-icon placeholder when omitted —
  * useful for previewing layout changes without the real asset.
+ *
+ * The character is tappable — a haptic bump plus a little bounce — and
+ * ringed by a slow purple sonar pulse (Colors.complement) to signal
+ * "this is interactive," a nod to Lola's own pulse in Hassle.
  */
 
 type ClusterChip = {
@@ -37,39 +52,77 @@ type MascotClusterProps = {
 
 export function MascotCluster({ mascotSource }: MascotClusterProps) {
   const reducedMotion = useReducedMotion();
-  const pulse = useSharedValue(0);
+  const breathe = useSharedValue(0);
+  const pressScale = useSharedValue(1);
 
   useEffect(() => {
     if (reducedMotion) return;
-    pulse.value = withRepeat(withTiming(1, { duration: 2600 }), -1, true);
-  }, [pulse, reducedMotion]);
+    breathe.value = withRepeat(withTiming(1, { duration: 2600 }), -1, true);
+  }, [breathe, reducedMotion]);
 
-  const pulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 + pulse.value * 0.035 }],
+  const characterStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: (1 + breathe.value * 0.035) * pressScale.value }],
   }));
+
+  function handlePress() {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    pressScale.value = withSequence(
+      withTiming(0.92, { duration: 90, easing: Easing.out(Easing.quad) }),
+      withSpring(1, { damping: 7, stiffness: 220 }),
+    );
+  }
 
   return (
     <View style={styles.cluster}>
       <Chip chip={CHIPS[0]} style={styles.topLeft} />
       <Chip chip={CHIPS[1]} style={styles.topRight} />
 
-      <View style={styles.characterWrap} pointerEvents="none">
-        <Animated.View style={[styles.characterInner, pulseStyle]}>
-          <View style={styles.glow} />
-          {mascotSource ? (
-            <Image source={mascotSource} style={styles.mascotImage} contentFit="contain" />
-          ) : (
-            <View style={styles.placeholderBadge}>
-              <Ionicons name="paw" size={72} color={Colors.accent} />
-            </View>
-          )}
-        </Animated.View>
+      <View style={styles.characterWrap} pointerEvents="box-none">
+        {!reducedMotion && (
+          <>
+            <PulseRing delay={0} />
+            <PulseRing delay={1400} />
+          </>
+        )}
+
+        <Pressable onPress={handlePress} hitSlop={16} style={styles.characterInner}>
+          <Animated.View style={[styles.characterFill, characterStyle]}>
+            <View style={styles.glow} />
+            {mascotSource ? (
+              <Image source={mascotSource} style={styles.mascotImage} contentFit="contain" />
+            ) : (
+              <View style={styles.placeholderBadge}>
+                <Ionicons name="paw" size={72} color={Colors.accent} />
+              </View>
+            )}
+          </Animated.View>
+        </Pressable>
       </View>
 
       <Chip chip={CHIPS[2]} style={styles.bottomLeft} />
       <Chip chip={CHIPS[3]} style={styles.bottomRight} />
     </View>
   );
+}
+
+function PulseRing({ delay }: { delay: number }) {
+  const t = useSharedValue(0);
+
+  useEffect(() => {
+    t.value = withDelay(
+      delay,
+      withRepeat(withTiming(1, { duration: 2800, easing: Easing.out(Easing.ease) }), -1, false),
+    );
+  }, [delay, t]);
+
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: (1 - t.value) * 0.5,
+    transform: [{ scale: 1 + t.value * 0.55 }],
+  }));
+
+  return <Animated.View pointerEvents="none" style={[styles.ring, ringStyle]} />;
 }
 
 function Chip({ chip, style }: { chip: ClusterChip; style: object }) {
@@ -108,9 +161,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  ring: {
+    position: 'absolute',
+    width: '72%',
+    aspectRatio: 1,
+    borderRadius: Radius.pill,
+    borderWidth: 2,
+    borderColor: Colors.complement,
+  },
   characterInner: {
     width: '78%',
     aspectRatio: 1,
+  },
+  characterFill: {
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,7 +1,10 @@
 /**
- * Heel's palette is intentionally single-mode: near-black + lavender, always.
- * It's a brand identity (shared with the rest of the Sends family), not a
- * light/dark toggle — see app.json's userInterfaceStyle: "dark".
+ * Heel's palette is intentionally single-mode: near-black, always — but
+ * warmer and earthier than the rest of the Sends family, on purpose.
+ * Moss green + saddle brown (pulled from Pickles' own coat) carry the
+ * brand; lavender survives only as `complement`, a deliberate nod to
+ * Hassle/Alchono used sparingly (currently: the mascot's pulse rings).
+ * Not a light/dark toggle — see app.json's userInterfaceStyle: "dark".
  */
 
 import '@/global.css';
@@ -9,18 +12,21 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 export const Colors = {
-  background: '#151517',
-  backgroundElement: '#1E1E22',
-  backgroundSelected: '#2A2A30',
-  border: '#2E2E34',
-  text: '#F5F3F7',
-  textSecondary: '#A9A6B0',
-  textMuted: '#75727C',
-  accent: '#A78BC9',
-  accentPressed: '#8F6FB0',
-  accentSoft: '#2C2536',
-  onAccent: '#151517',
-  attention: '#C9738C',
+  background: '#16130F',
+  backgroundElement: '#211B15',
+  backgroundSelected: '#2C241C',
+  border: '#362D23',
+  text: '#F5F0E8',
+  textSecondary: '#B7AB9A',
+  textMuted: '#8A7F70',
+  accent: '#6FA05C',
+  accentPressed: '#588048',
+  accentSoft: '#212D1C',
+  brown: '#B9834F',
+  brownSoft: '#2E2318',
+  onAccent: '#16130F',
+  complement: '#A78BC9',
+  attention: '#C9824A',
 } as const;
 
 export type ThemeColor = keyof typeof Colors;
