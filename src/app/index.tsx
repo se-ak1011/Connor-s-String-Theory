@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { BrandMark } from '@/components/brand-mark';
+import { MascotCluster } from '@/components/mascot-cluster';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -10,21 +10,24 @@ import { Card } from '@/components/ui/card';
 import { business, dogs, proofStatement, services } from '@/constants/business';
 import { Colors, Spacing } from '@/constants/theme';
 
+// Swap in the real Pickles illustration once it lands in the repo:
+// <MascotCluster mascotSource={require('@/assets/images/mascot/pickles-default.png')} />
 export default function HomeScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <BrandMark size={72} />
         <ThemedText type="title" style={styles.centerText}>
           {business.tagline}
         </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          Tap around Pickles, or dive straight into the details below.
+        </ThemedText>
+
+        <MascotCluster />
+
+        <ThemedText themeColor="textSecondary" style={styles.centerText}>
           {business.intro}
         </ThemedText>
-        <View style={styles.heroActions}>
-          <Button label="Book a session" onPress={() => router.push('/book')} />
-          <Button label="Meet the dogs" variant="secondary" onPress={() => router.push('/portfolio')} />
-        </View>
       </View>
 
       <View style={styles.section}>
@@ -105,13 +108,6 @@ const styles = StyleSheet.create({
   },
   centerText: {
     textAlign: 'center',
-  },
-  heroActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-    justifyContent: 'center',
-    marginTop: Spacing.two,
   },
   section: {
     gap: Spacing.three,
