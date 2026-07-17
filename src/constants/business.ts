@@ -65,7 +65,6 @@ export type DogProfile = {
   breed: string;
   blurb: string;
   trainedIn: string[];
-  photo?: string;
 };
 
 export const dogs: DogProfile[] = [

@@ -10,8 +10,6 @@ import { Card } from '@/components/ui/card';
 import { business, dogs, proofStatement, services } from '@/constants/business';
 import { Colors, Spacing } from '@/constants/theme';
 
-// Swap in the real Pickles illustration once it lands in the repo:
-// <MascotCluster mascotSource={require('@/assets/images/mascot/pickles-default.png')} />
 export default function HomeScreen() {
   return (
     <Screen>
@@ -23,7 +21,7 @@ export default function HomeScreen() {
           Tap around Pickles, or dive straight into the details below.
         </ThemedText>
 
-        <MascotCluster />
+        <MascotCluster mascotSource={require('@/assets/images/mascot/pickles-default.png')} />
 
         <ThemedText themeColor="textSecondary" style={styles.centerText}>
           {business.intro}

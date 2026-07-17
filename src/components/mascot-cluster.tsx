@@ -13,10 +13,8 @@ import { Colors, Radius, Spacing } from '@/constants/theme';
  * around it, radially — the pattern used across the rest of the Sends
  * family (Hassle's Lola, Alchono's companion).
  *
- * `mascotSource` is undefined until the real Pickles illustration exists.
- * When it's ready, pass it in from src/app/index.tsx — e.g.
- * `mascotSource={require('@/assets/images/mascot/pickles-default.png')}` —
- * no other changes needed here.
+ * `mascotSource` falls back to a paw-icon placeholder when omitted —
+ * useful for previewing layout changes without the real asset.
  */
 
 type ClusterChip = {
@@ -56,11 +54,14 @@ export function MascotCluster({ mascotSource }: MascotClusterProps) {
       <Chip chip={CHIPS[1]} style={styles.topRight} />
 
       <View style={styles.characterWrap} pointerEvents="none">
-        <Animated.View style={[styles.characterBackdrop, pulseStyle]}>
+        <Animated.View style={[styles.characterInner, pulseStyle]}>
+          <View style={styles.glow} />
           {mascotSource ? (
             <Image source={mascotSource} style={styles.mascotImage} contentFit="contain" />
           ) : (
-            <Ionicons name="paw" size={72} color={Colors.accent} />
+            <View style={styles.placeholderBadge}>
+              <Ionicons name="paw" size={72} color={Colors.accent} />
+            </View>
           )}
         </Animated.View>
       </View>
@@ -107,8 +108,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  characterBackdrop: {
-    width: '46%',
+  characterInner: {
+    width: '78%',
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glow: {
+    position: 'absolute',
+    width: '68%',
+    aspectRatio: 1,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.accentSoft,
+    opacity: 0.6,
+  },
+  placeholderBadge: {
+    width: '58%',
     aspectRatio: 1,
     borderRadius: Radius.large,
     backgroundColor: Colors.accentSoft,
@@ -116,8 +131,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   mascotImage: {
-    width: '82%',
-    height: '82%',
+    width: '100%',
+    height: '100%',
   },
   topLeft: { position: 'absolute', top: '4%', left: 0 },
   topRight: { position: 'absolute', top: '4%', right: 0 },

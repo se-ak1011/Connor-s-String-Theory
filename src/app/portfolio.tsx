@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image, type ImageProps } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
@@ -6,6 +7,11 @@ import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { dogs, proofStatement } from '@/constants/business';
 import { Colors, Spacing } from '@/constants/theme';
+
+// Add each dog's illustration here as it's ready — falls back to a paw icon until then.
+const DOG_PHOTOS: Partial<Record<string, ImageProps['source']>> = {
+  pickles: require('@/assets/images/mascot/pickles-default.png'),
+};
 
 export default function PortfolioScreen() {
   return (
@@ -23,7 +29,11 @@ export default function PortfolioScreen() {
         <Card key={dog.id} style={styles.dogCard}>
           <View style={styles.dogHeader}>
             <View style={styles.avatar}>
-              <Ionicons name="paw" size={32} color={Colors.accent} />
+              {DOG_PHOTOS[dog.id] ? (
+                <Image source={DOG_PHOTOS[dog.id]} style={styles.avatarImage} contentFit="cover" />
+              ) : (
+                <Ionicons name="paw" size={32} color={Colors.accent} />
+              )}
             </View>
             <View style={styles.dogHeaderText}>
               <ThemedText type="subtitle">{dog.name}</ThemedText>
@@ -73,6 +83,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   dogHeaderText: {
     gap: Spacing.half,
