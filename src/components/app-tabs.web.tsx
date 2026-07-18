@@ -73,7 +73,7 @@ export function CustomTabList(props: TabListProps) {
       <ThemedView type="backgroundElement" style={styles.innerContainer}>
         {!isCompact && (
           <>
-            <BrandMark size={32} withWordmark />
+            <BrandMark size={32} />
             <View style={styles.spacer} />
           </>
         )}

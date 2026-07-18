@@ -77,8 +77,8 @@ export default function ContactScreen() {
       </View>
 
       {status === 'sent' ? (
-        <Card highlighted style={styles.confirmationCard}>
-          <Ionicons name="checkmark-circle" size={28} color={Colors.accent} />
+        <Card style={[styles.confirmationCard, styles.successCard]}>
+          <Ionicons name="checkmark-circle" size={28} color={Colors.success} />
           <ThemedText type="smallBold">Sent — thank you.</ThemedText>
           <ThemedText themeColor="textSecondary" type="small">
             {business.trainerName} will get back to you soon.
@@ -185,6 +185,9 @@ const styles = StyleSheet.create({
   confirmationCard: {
     alignItems: 'center',
     gap: Spacing.one,
+  },
+  successCard: {
+    borderColor: Colors.success,
   },
   faqSection: {
     gap: Spacing.three,

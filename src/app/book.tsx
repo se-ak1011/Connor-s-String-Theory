@@ -92,7 +92,7 @@ export default function BookScreen() {
   if (status === 'confirmed') {
     return (
       <Screen>
-        <Card highlighted style={styles.confirmCard}>
+        <Card style={[styles.confirmCard, styles.successCard]}>
           <ThemedText type="subtitle">You're booked in 🎉</ThemedText>
           <ThemedText themeColor="textSecondary">
             {selectedService.name} on {selectedDate} at {selectedTime}. Connor will confirm shortly —
@@ -243,5 +243,8 @@ const styles = StyleSheet.create({
   confirmCard: {
     gap: Spacing.two,
     alignItems: 'center',
+  },
+  successCard: {
+    borderColor: Colors.success,
   },
 });

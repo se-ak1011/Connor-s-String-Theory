@@ -24,9 +24,9 @@ export function Button({ label, variant = 'primary', loading, style, disabled, .
       ]}
       {...rest}>
       {loading ? (
-        <ActivityIndicator color={isPrimary ? Colors.onAccent : Colors.accent} />
+        <ActivityIndicator color={isPrimary ? Colors.onAccent : Colors.text} />
       ) : (
-        <ThemedText type="smallBold" themeColor={isPrimary ? 'onAccent' : 'accent'}>
+        <ThemedText type="smallBold" themeColor={isPrimary ? 'onAccent' : 'text'}>
           {label}
         </ThemedText>
       )}
@@ -46,9 +46,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
   },
   secondary: {
-    backgroundColor: 'transparent',
+    backgroundColor: Colors.brown,
     borderWidth: 1,
-    borderColor: Colors.accent,
+    borderColor: Colors.brown,
   },
   pressed: {
     opacity: 0.75,
