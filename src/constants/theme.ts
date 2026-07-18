@@ -1,9 +1,12 @@
 /**
- * Heel's palette is intentionally single-mode: near-black, always — but
- * warmer and earthier than the rest of the Sends family, on purpose.
- * Moss green + saddle brown (pulled from Pickles' own coat) carry the
- * brand; lavender survives only as `complement`, a deliberate nod to
- * Hassle/Alchono used sparingly (currently: the mascot's pulse rings).
+ * Heel's neutral palette (background/surface/text) is sampled directly
+ * from a real photo of Pickles — his black mask, his tan coat, and the
+ * warm grizzled grey across his back/saddle are the "first, second,
+ * third" colors. No green, no invented brown.
+ *
+ * `accent` is purple — TODO: placeholder value below, swap for the
+ * exact hex once it's chosen. It's the one deliberate accent color,
+ * used everywhere something needs to read as interactive.
  * Not a light/dark toggle — see app.json's userInterfaceStyle: "dark".
  */
 
@@ -12,20 +15,20 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 export const Colors = {
-  background: '#16130F',
-  backgroundElement: '#211B15',
-  backgroundSelected: '#2C241C',
-  border: '#362D23',
+  background: '#151411', // 1st: sampled from Pickles' black mask
+  backgroundElement: '#231F1B',
+  backgroundSelected: '#2E2822',
+  border: '#3A332C',
   text: '#F5F0E8',
-  textSecondary: '#B7AB9A',
-  textMuted: '#8A7F70',
-  accent: '#3F6B4A',
-  accentPressed: '#345A3D',
-  accentSoft: '#1C2620',
-  brown: '#7A4E2C',
-  brownSoft: '#241B12',
-  onAccent: '#16130F',
-  complement: '#A78BC9',
+  textSecondary: '#A89F9D', // 3rd: sampled from his grizzled grey saddle
+  textMuted: '#786F68',
+  // TODO: placeholder purple — replace with the exact accent hex once chosen.
+  accent: '#A78BC9',
+  accentPressed: '#8F6FB0',
+  accentSoft: '#241F2C',
+  brown: '#9B7E61', // 2nd: sampled from his tan coat
+  brownSoft: '#2A2019',
+  onAccent: '#151411',
   attention: '#C9824A',
 } as const;
 
