@@ -23,7 +23,9 @@ export function SplashOverlay({ ready }: { ready: boolean }) {
   return (
     <Animated.View exiting={FadeOut.duration(400)} style={styles.overlay}>
       <View style={styles.pulse}>
-        <BrandMark size={88} />
+        {/* Wait for the custom font before rendering the wordmark — otherwise
+            it briefly flashes in the system fallback serif. */}
+        {ready && <BrandMark size={56} />}
       </View>
     </Animated.View>
   );
@@ -40,5 +42,6 @@ const styles = StyleSheet.create({
   pulse: {
     alignItems: 'center',
     justifyContent: 'center',
+    maxWidth: '80%',
   },
 });

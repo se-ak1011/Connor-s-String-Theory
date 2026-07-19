@@ -1,11 +1,11 @@
-# Heel
+# Connor's Lead
 
 Dog walking that's actually training. Every walk is a session — loose-lead
 walking, sit at kerbs, no pulling to other dogs, stopping for cars, no
 barking. Bean and Pickles are the proof.
 
-Built with Expo (SDK 57) + expo-router + Supabase, matching the Sends
-family's design language: near-black + lavender, calm and unhurried.
+Built with Expo (SDK 57) + expo-router + Supabase. Warm leather and walnut
+tones pulled from Pickles' own coat, calm and unhurried.
 
 ## Get started
 

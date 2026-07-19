@@ -1,5 +1,5 @@
 /**
- * Single source of truth for Heel's shopfront copy, pricing, and portfolio
+ * Single source of truth for the shopfront copy, pricing, and portfolio
  * content. Edit this file to update what the app says — no component code
  * needs to change for a copy or price tweak.
  *
@@ -7,17 +7,17 @@
  */
 
 export const business = {
-  name: 'Heel',
+  name: "Connor's Lead",
   tagline: 'Every walk is a training session.',
   trainerName: 'Connor',
   intro:
-    "Most dog walkers just walk your dog. Heel walks are training sessions in disguise — loose-lead walking, sitting at kerbs, no pulling toward other dogs, no barking at cars. You get a tired, happier dog and real, lasting manners, one walk at a time.",
+    "Most dog walkers just walk your dog. Every walk with Connor's Lead is a training session in disguise — loose-lead walking, sitting at kerbs, no pulling toward other dogs, no barking at cars. You get a tired, happier dog and real, lasting manners, one walk at a time.",
   serviceArea: 'Serving the local area and surrounding villages — get in touch to check your postcode.',
   contact: {
     // TODO: replace with Connor's real contact details before launch.
-    email: 'hello@heeldogtraining.co.uk',
+    email: 'hello@connorslead.co.uk',
     phone: '07000 000000',
-    instagram: '@heel.dogtraining',
+    instagram: '@connorslead',
   },
 };
 
@@ -95,7 +95,7 @@ export const faqs: FaqItem[] = [
   {
     question: 'My dog pulls like a steam train — can you actually fix that?',
     answer:
-      "Almost always, yes. Loose-lead walking is trained through the walk itself, not a one-off lesson — that's the whole idea behind Heel. Book a taster and Connor will give you an honest read on timelines for your dog specifically.",
+      "Almost always, yes. Loose-lead walking is trained through the walk itself, not a one-off lesson — that's the whole idea behind Connor's Lead. Book a taster and Connor will give you an honest read on timelines for your dog specifically.",
   },
   {
     question: 'Do you walk multiple dogs at once?',

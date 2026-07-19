@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
         {
           price_data: {
             currency: 'gbp',
-            product_data: { name: 'Heel booking deposit' },
+            product_data: { name: "Connor's Lead booking deposit" },
             unit_amount: amount,
           },
           quantity: 1,

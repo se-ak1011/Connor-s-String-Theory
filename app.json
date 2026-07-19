@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Heel",
-    "slug": "heel",
+    "name": "Connor's Lead",
+    "slug": "connors-lead",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "heel",
+    "scheme": "connorslead",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#161311",
     "ios": {

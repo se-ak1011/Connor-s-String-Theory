@@ -1,4 +1,4 @@
-# Heel — going from placeholder to live
+# Connor's Lead — going from placeholder to live
 
 This app runs and looks finished right now with no setup — the calendar,
 booking form, and enquiry form all work using placeholder data. This doc
@@ -71,4 +71,4 @@ happy to help wire that up when you're ready.
 - `npx expo prebuild` + EAS build once the above is done, same as the
   Hassle pipeline.
 - App icon / splash currently uses the default Expo placeholders in
-  `assets/images/` — swap those for a Heel icon whenever one exists.
+  `assets/images/` — swap those for a Connor's Lead icon whenever one exists.

@@ -54,7 +54,7 @@ export default function ContactScreen() {
           About {business.trainerName}
         </ThemedText>
         <ThemedText themeColor="textSecondary">
-          {business.trainerName} trains every dog on a Heel walk personally, using the same methods
+          {business.trainerName} trains every dog personally, using the same methods
           he used to raise Bean and Pickles — from a food-motivated chihuahua to a high-drive
           working-line cross — to a genuinely high standard by 9 months old.
         </ThemedText>

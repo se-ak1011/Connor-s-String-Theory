@@ -91,7 +91,7 @@ export default function HomeScreen() {
           Meet your trainer
         </ThemedText>
         <ThemedText themeColor="textSecondary">
-          {business.trainerName} trains every dog on Heel walks personally — {business.serviceArea}
+          {business.trainerName} trains every dog personally, on every walk — {business.serviceArea}
         </ThemedText>
         <Button label="Get in touch" variant="secondary" onPress={() => router.push('/contact')} />
       </Card>

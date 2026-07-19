@@ -1,5 +1,5 @@
 /**
- * Heel's palette: warm leather, saddle brown, walnut, espresso, charcoal —
+ * The palette: warm leather, saddle brown, walnut, espresso, charcoal —
  * Pickles' natural coat, not a purple app-identity. Premium, quiet,
  * masculine, understated; contrast comes from warm tonal separation, not
  * white. Not a light/dark toggle — see app.json's userInterfaceStyle: "dark".
