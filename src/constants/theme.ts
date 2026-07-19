@@ -30,10 +30,10 @@ export const Colors = {
 export type ThemeColor = keyof typeof Colors;
 
 export const Fonts = {
-  display: 'Manrope_600SemiBold',
-  displayBold: 'Manrope_700Bold',
-  sans: 'Manrope_400Regular',
-  sansMedium: 'Manrope_500Medium',
+  display: 'Satoshi-Bold',
+  displayBold: 'Satoshi-Black',
+  sans: 'Satoshi-Regular',
+  sansMedium: 'Satoshi-Medium',
   mono: Platform.select({ ios: 'ui-monospace', default: 'monospace' }),
 };
 
