@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Connor's Lead",
-    "slug": "connors-lead",
+    "name": "Connor's String Theory",
+    "slug": "connors-string-theory",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "connorslead",
+    "scheme": "connorsstringtheory",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#161311",
     "ios": {

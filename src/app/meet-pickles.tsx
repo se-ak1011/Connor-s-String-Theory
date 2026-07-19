@@ -86,8 +86,8 @@ export default function MeetPicklesScreen() {
         ))}
 
         <ThemedText themeColor="textMuted" type="small" style={styles.centerText}>
-          More dogs — and their owners' words — will go here as Connor's Lead takes on new
-          clients.
+          More dogs — and their owners' words — will go here as Connor's String Theory takes on
+          new clients.
         </ThemedText>
       </View>
     </Screen>

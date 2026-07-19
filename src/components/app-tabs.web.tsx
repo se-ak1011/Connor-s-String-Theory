@@ -66,14 +66,16 @@ export function TabButton({
 
 export function CustomTabList(props: TabListProps) {
   const { width } = useWindowDimensions();
-  const isCompact = width < 520;
+  const isCompact = width < 640;
 
   return (
     <View {...props} style={styles.tabListContainer}>
       <ThemedView type="backgroundElement" style={styles.innerContainer}>
         {!isCompact && (
           <>
-            <BrandMark size={32} />
+            <View style={styles.brandWrap}>
+              <BrandMark size={20} singleLine />
+            </View>
             <View style={styles.spacer} />
           </>
         )}
@@ -109,6 +111,10 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth,
     borderWidth: 1,
     borderColor: Colors.border,
+  },
+  brandWrap: {
+    flexShrink: 1,
+    maxWidth: 260,
   },
   spacer: {
     flexGrow: 1,

@@ -12,17 +12,17 @@
  */
 
 export const business = {
-  name: "Connor's Lead",
+  name: "Connor's String Theory",
   tagline: 'Real-world training. A calmer, more capable dog.',
   trainerName: 'Connor',
   intro:
-    "Connor's Lead isn't a dog walking service — it's dog training, delivered through real walks, play and structured time together. Each session is shaped around your dog: what they find hard, what they're ready to work on next. They come home tired, but they also come home having learned something.",
+    "Connor's String Theory isn't a dog walking service — it's dog training, delivered through real walks, play and structured time together. Each session is shaped around your dog: what they find hard, what they're ready to work on next. They come home tired, but they also come home having learned something.",
   serviceArea: 'Serving the local area and surrounding villages — get in touch to check your postcode.',
   contact: {
     // TODO: replace with Connor's real contact details before launch.
-    email: 'hello@connorslead.co.uk',
+    email: 'hello@connorsstringtheory.co.uk',
     phone: '07000 000000',
-    instagram: '@connorslead',
+    instagram: '@connorsstringtheory',
   },
 };
 
@@ -112,7 +112,7 @@ export const pickles: PicklesProfile = {
   name: 'Pickles',
   breed: '~55% Belgian Malinois × German Shepherd',
   story:
-    "Pickles is the reason Connor's Lead exists. A working-line dog with serious drive — the kind that could easily turn into a handful — raised from a puppy using the same calm, consistent methods Connor now teaches to other owners. By nine months old he was walking loose-lead, waiting at kerbs, and switching off around distractions that would send most dogs into overdrive. He's not a mascot bolted on afterwards — he's the proof the method works, and he still comes on sessions today.",
+    "Pickles is the reason Connor's String Theory exists. A working-line dog with serious drive — the kind that could easily turn into a handful — raised from a puppy using the same calm, consistent methods Connor now teaches to other owners. By nine months old he was walking loose-lead, waiting at kerbs, and switching off around distractions that would send most dogs into overdrive. He's not a mascot bolted on afterwards — he's the proof the method works, and he still comes on sessions today.",
   trainedIn: ['Loose-lead walking', 'Impulse control', 'Kerb & traffic manners', 'Calm in high-stimulation environments'],
 };
 
@@ -144,7 +144,7 @@ export const faqs: FaqItem[] = [
   {
     question: 'My dog pulls like a steam train — can you actually fix that?',
     answer:
-      "Almost always, yes. Loose-lead walking is trained through real walks, not a one-off lesson — that's the whole idea behind Connor's Lead. Book a taster and Connor will give you an honest read on timelines for your dog specifically.",
+      "Almost always, yes. Loose-lead walking is trained through real walks, not a one-off lesson — that's the whole idea behind Connor's String Theory. Book a taster and Connor will give you an honest read on timelines for your dog specifically.",
   },
   {
     question: "What's a Social Session with Pickles?",

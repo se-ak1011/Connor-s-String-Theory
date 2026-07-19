@@ -1,4 +1,4 @@
-# Connor's Lead — going from placeholder to live
+# Connor's String Theory — going from placeholder to live
 
 This app runs and looks finished right now with no setup — the calendar,
 booking form, and enquiry form all work using placeholder data. This doc
@@ -74,4 +74,4 @@ is more honest than a fake quote.
 - `npx expo prebuild` + EAS build once the above is done, same as the
   Hassle pipeline.
 - App icon / splash currently uses the default Expo placeholders in
-  `assets/images/` — swap those for a Connor's Lead icon whenever one exists.
+  `assets/images/` — swap those for a Connor's String Theory icon whenever one exists.

@@ -1,4 +1,4 @@
--- Connor's Lead — Supabase schema
+-- Connor's String Theory — Supabase schema
 -- Run this in the Supabase SQL editor (or via `supabase db push`) on a fresh project.
 
 create table if not exists availability_slots (

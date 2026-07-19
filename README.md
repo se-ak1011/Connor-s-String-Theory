@@ -1,4 +1,4 @@
-# Connor's Lead
+# Connor's String Theory
 
 Dog training, delivered through real-world walks, play and structured
 interaction — not a dog walking service. Pickles, Connor's own dog, is
