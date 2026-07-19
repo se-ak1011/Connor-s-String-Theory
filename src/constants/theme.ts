@@ -30,10 +30,10 @@ export const Colors = {
 export type ThemeColor = keyof typeof Colors;
 
 export const Fonts = {
-  display: 'ShantellSans_600SemiBold',
-  displayBold: 'ShantellSans_700Bold',
-  sans: 'ShantellSans_400Regular',
-  sansMedium: 'ShantellSans_500Medium',
+  display: 'Manrope_600SemiBold',
+  displayBold: 'Manrope_700Bold',
+  sans: 'Manrope_400Regular',
+  sansMedium: 'Manrope_500Medium',
   mono: Platform.select({ ios: 'ui-monospace', default: 'monospace' }),
 };
 

@@ -1,10 +1,10 @@
 import {
-  ShantellSans_400Regular,
-  ShantellSans_500Medium,
-  ShantellSans_600SemiBold,
-  ShantellSans_700Bold,
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
   useFonts,
-} from '@expo-google-fonts/shantell-sans';
+} from '@expo-google-fonts/manrope';
 import { DarkTheme, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
@@ -13,10 +13,10 @@ import { SplashOverlay } from '@/components/splash-overlay';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    ShantellSans_400Regular,
-    ShantellSans_500Medium,
-    ShantellSans_600SemiBold,
-    ShantellSans_700Bold,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
   });
 
   return (

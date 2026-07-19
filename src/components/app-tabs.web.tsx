@@ -18,7 +18,7 @@ import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
 const TABS: { name: string; href: Href; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { name: 'home', href: '/', label: 'Home', icon: 'home' },
-  { name: 'portfolio', href: '/portfolio', label: 'The Dogs', icon: 'paw' },
+  { name: 'meet-pickles', href: '/meet-pickles', label: 'Meet Pickles', icon: 'paw' },
   { name: 'book', href: '/book', label: 'Book', icon: 'calendar' },
   { name: 'contact', href: '/contact', label: 'Contact', icon: 'chatbubble-ellipses' },
 ];

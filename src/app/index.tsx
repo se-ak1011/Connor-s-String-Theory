@@ -7,7 +7,7 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { business, dogs, proofStatement, services } from '@/constants/business';
+import { business, focusAreas, services } from '@/constants/business';
 import { Colors, Spacing } from '@/constants/theme';
 
 export default function HomeScreen() {
@@ -29,21 +29,27 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.section}>
-        <ThemedText type="subtitle">What every walk includes</ThemedText>
+        <ThemedText type="subtitle">What sessions can work on</ThemedText>
+        <ThemedText themeColor="textSecondary" type="small">
+          No two dogs need the same thing. Sessions are built around whichever of these your dog
+          needs most.
+        </ThemedText>
         <View style={styles.pillRow}>
-          {['Loose-lead walking', 'Kerb waits', 'No pulling to other dogs', 'Calm around traffic', 'No barking'].map(
-            (item) => (
-              <View key={item} style={styles.pill}>
-                <Ionicons name="checkmark" size={14} color={Colors.accent} />
-                <ThemedText type="small">{item}</ThemedText>
-              </View>
-            ),
-          )}
+          {focusAreas.map((item) => (
+            <View key={item} style={styles.pill}>
+              <Ionicons name="checkmark" size={14} color={Colors.accent} />
+              <ThemedText type="small">{item}</ThemedText>
+            </View>
+          ))}
         </View>
       </View>
 
       <View style={styles.section}>
-        <ThemedText type="subtitle">Sessions & pricing</ThemedText>
+        <ThemedText type="subtitle">Sessions</ThemedText>
+        <ThemedText themeColor="textSecondary" type="small">
+          Every session is shaped around your dog, not a fixed curriculum. These are typical
+          starting points.
+        </ThemedText>
         {services.map((service) => (
           <Card key={service.id} highlighted={service.highlight}>
             <ThemedText type="smallBold" themeColor="accent">
@@ -67,31 +73,26 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      <View style={styles.section}>
-        <ThemedText type="subtitle">The proof is in the dogs</ThemedText>
-        <ThemedText themeColor="textSecondary">{proofStatement}</ThemedText>
-        <View style={styles.dogRow}>
-          {dogs.map((dog) => (
-            <View key={dog.id} style={styles.dogTeaser}>
-              <View style={styles.dogAvatar}>
-                <Ionicons name="paw" size={28} color={Colors.accent} />
-              </View>
-              <ThemedText type="smallBold">{dog.name}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {dog.breed}
-              </ThemedText>
-            </View>
-          ))}
-        </View>
-        <Button label="See their full profiles" variant="secondary" onPress={() => router.push('/portfolio')} />
-      </View>
+      <Card style={styles.picklesCard}>
+        <ThemedText type="smallBold" themeColor="accent">
+          The dog behind the method
+        </ThemedText>
+        <ThemedText themeColor="textSecondary">
+          Pickles — Connor's own dog — is a high-drive Belgian Malinois cross who could easily
+          have turned into a handful. Instead, he's living proof of what these methods actually
+          produce.
+        </ThemedText>
+        <Button label="Meet Pickles" variant="secondary" onPress={() => router.push('/meet-pickles')} />
+      </Card>
 
       <Card style={styles.trainerCard}>
         <ThemedText type="smallBold" themeColor="accent">
           Meet your trainer
         </ThemedText>
         <ThemedText themeColor="textSecondary">
-          {business.trainerName} trains every dog personally, on every walk — {business.serviceArea}
+          {business.trainerName} trains every dog personally, and where it helps, he trains
+          owners too — the goal is a relationship that works without him there.{' '}
+          {business.serviceArea}
         </ThemedText>
         <Button label="Get in touch" variant="secondary" onPress={() => router.push('/contact')} />
       </Card>
@@ -134,21 +135,8 @@ const styles = StyleSheet.create({
   serviceName: {
     fontWeight: '600',
   },
-  dogRow: {
-    flexDirection: 'row',
-    gap: Spacing.four,
-  },
-  dogTeaser: {
-    alignItems: 'center',
-    gap: Spacing.half,
-  },
-  dogAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.brownSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
+  picklesCard: {
+    alignItems: 'flex-start',
   },
   trainerCard: {
     alignItems: 'flex-start',

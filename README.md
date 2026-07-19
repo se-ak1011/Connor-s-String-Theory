@@ -1,8 +1,8 @@
 # Connor's Lead
 
-Dog walking that's actually training. Every walk is a session — loose-lead
-walking, sit at kerbs, no pulling to other dogs, stopping for cars, no
-barking. Bean and Pickles are the proof.
+Dog training, delivered through real-world walks, play and structured
+interaction — not a dog walking service. Pickles, Connor's own dog, is
+the proof the method works.
 
 Built with Expo (SDK 57) + expo-router + Supabase. Warm leather and walnut
 tones pulled from Pickles' own coat, calm and unhurried.
@@ -18,9 +18,10 @@ Press `w` for web, or open with Expo Go / a dev build for native.
 
 ## Where things live
 
-- `src/app/` — the four screens: Home, The Dogs (portfolio), Book, Contact.
-- `src/constants/business.ts` — all copy, prices, dog profiles, FAQ. Edit
-  this file for content changes; you shouldn't need to touch components.
+- `src/app/` — the four screens: Home, Meet Pickles, Book, Contact.
+- `src/constants/business.ts` — all copy, prices, services, focus areas,
+  Pickles' profile, client dogs, and FAQ. Edit this file for content
+  changes; you shouldn't need to touch components.
 - `src/lib/` — Supabase client, availability, and booking/enquiry submission.
 - `supabase/` — schema and the Stripe checkout edge function.
 

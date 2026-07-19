@@ -60,11 +60,14 @@ you deploy the edge function:
 Until you do this, bookings still save fine — they just skip straight to
 "pending confirmation," and Connor arranges payment directly.
 
-## 4. Real photos of Bean & Pickles
+## 4. Real photos and testimonials for client dogs
 
-`src/app/portfolio.tsx` currently shows a paw icon in place of photos.
-Swap in real images via `expo-image` once you've got a few good shots —
-happy to help wire that up when you're ready.
+Pickles has his illustration wired up already. Bean (and any future
+client dogs) still show a paw icon in `src/app/meet-pickles.tsx` — add
+a photo the same way once you've got one, and fill in `testimonial` on
+the `clientDogs` entry in `src/constants/business.ts` once a real client
+gives you a quote. Don't invent one in the meantime — an empty section
+is more honest than a fake quote.
 
 ## 5. Ship it
 

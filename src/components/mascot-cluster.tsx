@@ -40,10 +40,10 @@ type ClusterChip = {
 };
 
 const CHIPS: [ClusterChip, ClusterChip, ClusterChip, ClusterChip] = [
-  { label: 'The Dogs', icon: 'paw', href: '/portfolio' },
-  { label: 'Pricing', icon: 'pricetag', href: '/book' },
+  { label: 'Meet Pickles', icon: 'paw', href: '/meet-pickles' },
+  { label: 'Services', icon: 'list', href: '/book' },
   { label: 'Meet Connor', icon: 'chatbubble-ellipses', href: '/contact' },
-  { label: 'Book a walk', icon: 'calendar', href: '/book', highlight: true },
+  { label: 'Book a session', icon: 'calendar', href: '/book', highlight: true },
 ];
 
 type MascotClusterProps = {

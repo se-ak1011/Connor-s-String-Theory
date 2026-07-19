@@ -17,8 +17,8 @@ export default function AppTabs() {
         />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="portfolio">
-        <NativeTabs.Trigger.Label>The Dogs</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="meet-pickles">
+        <NativeTabs.Trigger.Label>Meet Pickles</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="paw" />}
         />

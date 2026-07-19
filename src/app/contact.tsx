@@ -56,9 +56,11 @@ export default function ContactScreen() {
           About {business.trainerName}
         </ThemedText>
         <ThemedText themeColor="textSecondary">
-          {business.trainerName} trains every dog personally, using the same methods
-          he used to raise Bean and Pickles — from a food-motivated chihuahua to a high-drive
-          working-line cross — to a genuinely high standard by 9 months old.
+          {business.trainerName} doesn't just walk dogs — he develops them. Every session works
+          toward a dog that's calmer, more confident and better behaved, using the same methods
+          that took Bean, a food-motivated chihuahua, and Pickles, a high-drive working-line
+          cross, to genuinely well-mannered dogs. Some sessions he works with your dog directly;
+          others, he coaches you to do it yourself.
         </ThemedText>
         <ThemedText themeColor="textSecondary" type="small">
           {business.serviceArea}
