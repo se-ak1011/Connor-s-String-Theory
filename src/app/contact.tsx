@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 
+import { BrandEmblem } from '@/components/brand-emblem';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,8 @@ export default function ContactScreen() {
       </View>
 
       <Card style={styles.aboutCard}>
-        <ThemedText type="smallBold" themeColor="accent">
+        <BrandEmblem width={100} />
+        <ThemedText type="smallBold" themeColor="accent" style={styles.centerText}>
           About {business.trainerName}
         </ThemedText>
         <ThemedText themeColor="textSecondary">
