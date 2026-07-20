@@ -48,8 +48,9 @@ export default function BookScreen() {
       marks[selectedDate] = {
         ...marks[selectedDate],
         selected: true,
-        selectedColor: Colors.accent,
-        selectedTextColor: Colors.onAccent,
+        // Purple accent — this is the "selected control" use case.
+        selectedColor: Colors.complement,
+        selectedTextColor: Colors.backgroundElement,
       };
     }
     return marks;
@@ -145,8 +146,8 @@ export default function BookScreen() {
               todayTextColor: Colors.accent,
               arrowColor: Colors.accent,
               textDisabledColor: Colors.textMuted,
-              selectedDayBackgroundColor: Colors.accent,
-              selectedDayTextColor: Colors.onAccent,
+              selectedDayBackgroundColor: Colors.complement,
+              selectedDayTextColor: Colors.backgroundElement,
               dotColor: Colors.accent,
               textDayFontFamily: Fonts.sans,
               textMonthFontFamily: Fonts.displayBold,

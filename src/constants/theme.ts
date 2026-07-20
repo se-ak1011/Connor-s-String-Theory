@@ -1,9 +1,10 @@
 /**
- * The palette: sampled directly from the Connor's String Theory logo —
- * dark olive-charcoal, muted khaki, warm tan (Pickles' coat), cream.
- * Premium, quiet, masculine, understated; contrast comes from warm
- * tonal separation, not white. Not a light/dark toggle — see app.json's
- * userInterfaceStyle: "dark".
+ * Full brand reset — light, earthy, based on Pickles. Greige background,
+ * never white. Heather purple is the ONLY accent, used sparingly (links,
+ * focus states, progress/haptic feedback, selection) — it must never read
+ * as the primary interactive color; that's the warm taupe "brand" tone.
+ * Fixed single identity, not a light/dark toggle — see app.json's
+ * userInterfaceStyle: "light".
  */
 
 import '@/global.css';
@@ -11,34 +12,35 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 export const Colors = {
-  background: '#181A16',
-  backgroundElement: '#252820',
-  backgroundSelected: '#2F3327',
-  border: '#3A3E30',
-  text: '#F5EEE1',
-  textSecondary: '#D9D0BC',
-  textMuted: '#9C9782',
-  accent: '#8C8862',
-  accentPressed: '#A5A177',
-  accentSoft: '#22241B',
-  brown: '#8A6F4E',
-  brownSoft: '#241D14',
-  onAccent: '#181A16',
-  success: '#6F9159',
-  attention: '#C08A4A',
-  // Olive's complement — dusty, warm-leaning plum, not a bright lavender.
-  // Reserved for quiet/interactive-only moments (haptic touchpoints,
-  // the mascot's pulse ring) — never a dominant UI color.
-  complement: '#8A6E8C',
+  background: '#B5ADA2',
+  backgroundElement: '#CFCEC8',
+  backgroundSelected: '#C3B6A5',
+  border: '#A69B8C',
+  text: '#2B2621',
+  heading: '#564A3D',
+  textSecondary: '#4F453A',
+  textMuted: '#786C5D',
+  accent: '#9B8C7D',
+  accentPressed: '#7B6A59',
+  accentSoft: '#C7BCA9',
+  brown: '#7B6A59',
+  brownSoft: '#E1DACD',
+  onAccent: '#2B2621',
+  success: '#6E7C4E',
+  attention: '#A8794A',
+  // Heather purple — the one accent color. Links, focus states, progress
+  // and haptic-feedback visuals, selection indicators. Never primary
+  // buttons or nav — must stay Pickles-first, purple second.
+  complement: '#76648C',
 } as const;
 
 export type ThemeColor = keyof typeof Colors;
 
 export const Fonts = {
-  display: 'Kalam_700Bold',
-  displayBold: 'Kalam_700Bold',
-  sans: 'Kalam_400Regular',
-  sansMedium: 'Kalam_700Bold',
+  display: 'FrostImperial',
+  displayBold: 'FrostImperial',
+  sans: 'FrostImperial',
+  sansMedium: 'FrostImperial',
   mono: Platform.select({ ios: 'ui-monospace', default: 'monospace' }),
 };
 

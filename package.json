@@ -3,7 +3,6 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
-    "@expo-google-fonts/kalam": "^0.4.1",
     "@expo/vector-icons": "^15.1.1",
     "@supabase/supabase-js": "^2.110.7",
     "expo": "~57.0.7",

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StyleSheet, TextInput, type TextInputProps, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -7,7 +8,9 @@ type TextFieldProps = TextInputProps & {
   label: string;
 };
 
-export function TextField({ label, style, ...rest }: TextFieldProps) {
+export function TextField({ label, style, onFocus, onBlur, ...rest }: TextFieldProps) {
+  const [focused, setFocused] = useState(false);
+
   return (
     <View style={styles.wrapper}>
       <ThemedText type="small" themeColor="textSecondary">
@@ -15,7 +18,15 @@ export function TextField({ label, style, ...rest }: TextFieldProps) {
       </ThemedText>
       <TextInput
         placeholderTextColor={Colors.textMuted}
-        style={[styles.input, style]}
+        style={[styles.input, focused && styles.inputFocused, style]}
+        onFocus={(e) => {
+          setFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          onBlur?.(e);
+        }}
         {...rest}
       />
     </View>
@@ -36,5 +47,9 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontFamily: Fonts.sans,
     fontSize: 16,
+  },
+  // Focus state — the one deliberate purple accent on form fields.
+  inputFocused: {
+    borderColor: Colors.complement,
   },
 });

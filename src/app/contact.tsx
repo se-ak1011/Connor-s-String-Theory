@@ -2,7 +2,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 
-import { BrandEmblem } from '@/components/brand-emblem';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -51,7 +50,6 @@ export default function ContactScreen() {
       </View>
 
       <Card style={styles.aboutCard}>
-        <BrandEmblem width={100} />
         <ThemedText type="smallBold" themeColor="accent" style={styles.centerText}>
           About {business.trainerName}
         </ThemedText>
@@ -150,8 +148,8 @@ function ContactLink({
 }) {
   return (
     <View style={styles.contactLinkWrap}>
-      <Ionicons name={icon} size={16} color={Colors.accent} onPress={onPress} />
-      <ThemedText type="link" onPress={onPress}>
+      <Ionicons name={icon} size={16} color={Colors.complement} onPress={onPress} />
+      <ThemedText type="linkPrimary" onPress={onPress}>
         {label}
       </ThemedText>
     </View>

@@ -16,11 +16,15 @@ export type ThemedTextProps = TextProps & {
   themeColor?: ThemeColor;
 };
 
+const HEADING_TYPES = new Set(['display', 'title', 'subtitle']);
+
 export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
+  const defaultColor = HEADING_TYPES.has(type) ? 'heading' : 'text';
+
   return (
     <Text
       style={[
-        { color: Colors[themeColor ?? 'text'] },
+        { color: Colors[themeColor ?? defaultColor] },
         type === 'default' && styles.default,
         type === 'display' && styles.display,
         type === 'title' && styles.title,
@@ -77,7 +81,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansMedium,
     lineHeight: 30,
     fontSize: 14,
-    color: Colors.accent,
+    color: Colors.complement,
   },
   code: {
     fontFamily: Fonts.mono,

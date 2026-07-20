@@ -24,9 +24,10 @@ export function Button({ label, variant = 'primary', loading, style, disabled, .
       ]}
       {...rest}>
       {loading ? (
-        <ActivityIndicator color={isPrimary ? Colors.onAccent : Colors.text} />
+        // Progress indicator — one of the purple accent's deliberate use cases.
+        <ActivityIndicator color={Colors.complement} />
       ) : (
-        <ThemedText type="smallBold" themeColor={isPrimary ? 'onAccent' : 'text'}>
+        <ThemedText type="smallBold" themeColor={isPrimary ? 'onAccent' : 'backgroundElement'}>
           {label}
         </ThemedText>
       )}
