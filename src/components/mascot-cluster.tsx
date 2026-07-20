@@ -28,8 +28,9 @@ import { Colors, Radius, Spacing } from '@/constants/theme';
  * useful for previewing layout changes without the real asset.
  *
  * The character is tappable — a haptic bump plus a little bounce — and
- * ringed by a slow accent-colored sonar pulse to signal "this is
- * interactive," a nod to Lola's own pulse in Hassle.
+ * ringed by a slow sonar pulse in Colors.complement (the one deliberate
+ * purple touch, reserved for haptic/interactive moments) to signal
+ * "this is interactive," a nod to Lola's own pulse in Hassle.
  */
 
 type ClusterChip = {
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: Radius.pill,
     borderWidth: 2,
-    borderColor: Colors.accent,
+    borderColor: Colors.complement,
   },
   characterInner: {
     width: '78%',

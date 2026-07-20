@@ -26,6 +26,10 @@ export const Colors = {
   onAccent: '#181A16',
   success: '#6F9159',
   attention: '#C08A4A',
+  // Olive's complement — dusty, warm-leaning plum, not a bright lavender.
+  // Reserved for quiet/interactive-only moments (haptic touchpoints,
+  // the mascot's pulse ring) — never a dominant UI color.
+  complement: '#8A6E8C',
 } as const;
 
 export type ThemeColor = keyof typeof Colors;
