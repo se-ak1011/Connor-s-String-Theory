@@ -37,13 +37,15 @@ export const Colors = {
 export type ThemeColor = keyof typeof Colors;
 
 export const Fonts = {
-  // Frost Imperial (handwritten) carries titles/subtitles only — it has no
-  // second weight, and reads poorly at body sizes. Work Sans, a humanist
-  // sans, carries everything else so it stays legible.
+  // Frost Imperial carries titles/subtitles; Simple Handwriting carries
+  // body/UI text — a second, calmer handwritten face that stays legible
+  // at small sizes, so body copy still reads as the same family instead
+  // of switching to an unrelated system sans. Neither has a second
+  // weight, so hierarchy comes from size/color, not bold.
   display: 'FrostImperial',
   displayBold: 'FrostImperial',
-  sans: 'WorkSans_400Regular',
-  sansMedium: 'WorkSans_600SemiBold',
+  sans: 'SimpleHandwriting',
+  sansMedium: 'SimpleHandwriting',
   mono: Platform.select({ ios: 'ui-monospace', default: 'monospace' }),
 };
 
