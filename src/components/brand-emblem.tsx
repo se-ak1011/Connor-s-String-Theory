@@ -2,13 +2,15 @@ import { Image } from 'expo-image';
 import { StyleSheet } from 'react-native';
 
 /**
- * The illustrated Connor + Pickles mark (a "C" window-frame seal).
+ * The illustrated Connor + Pickles mark — a ring seal, cropped from
+ * the full logo (wordmark stripped out; that's rendered live via
+ * BrandMark instead, so a name change doesn't need a new asset).
  * Detailed painterly illustration — only use it where it can breathe
  * (splash, About/Contact). Too fine-detailed for small UI like the nav
  * bar; use the plain text BrandMark there instead.
  */
 
-const ASPECT_RATIO = 814 / 887;
+const ASPECT_RATIO = 846 / 798;
 
 type BrandEmblemProps = {
   width?: number;

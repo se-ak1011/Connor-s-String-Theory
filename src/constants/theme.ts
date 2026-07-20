@@ -1,8 +1,9 @@
 /**
- * The palette: warm leather, saddle brown, walnut, espresso, charcoal —
- * Pickles' natural coat, not a purple app-identity. Premium, quiet,
- * masculine, understated; contrast comes from warm tonal separation, not
- * white. Not a light/dark toggle — see app.json's userInterfaceStyle: "dark".
+ * The palette: sampled directly from the Connor's String Theory logo —
+ * dark olive-charcoal, muted khaki, warm tan (Pickles' coat), cream.
+ * Premium, quiet, masculine, understated; contrast comes from warm
+ * tonal separation, not white. Not a light/dark toggle — see app.json's
+ * userInterfaceStyle: "dark".
  */
 
 import '@/global.css';
@@ -10,21 +11,21 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 export const Colors = {
-  background: '#161311',
-  backgroundElement: '#241E1A',
-  backgroundSelected: '#2E2620',
-  border: '#3B3028',
-  text: '#F2E8DD',
-  textSecondary: '#D9CEC2',
-  textMuted: '#A99989',
-  accent: '#B88956',
-  accentPressed: '#D1A16A',
-  accentSoft: '#2A2018',
-  brown: '#6B4C35',
-  brownSoft: '#241A12',
-  onAccent: '#161311',
-  success: '#7B8A5A',
-  attention: '#C9824A',
+  background: '#181A16',
+  backgroundElement: '#252820',
+  backgroundSelected: '#2F3327',
+  border: '#3A3E30',
+  text: '#F5EEE1',
+  textSecondary: '#D9D0BC',
+  textMuted: '#9C9782',
+  accent: '#8C8862',
+  accentPressed: '#A5A177',
+  accentSoft: '#22241B',
+  brown: '#8A6F4E',
+  brownSoft: '#241D14',
+  onAccent: '#181A16',
+  success: '#6F9159',
+  attention: '#C08A4A',
 } as const;
 
 export type ThemeColor = keyof typeof Colors;
