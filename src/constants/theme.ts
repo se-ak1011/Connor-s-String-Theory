@@ -37,10 +37,13 @@ export const Colors = {
 export type ThemeColor = keyof typeof Colors;
 
 export const Fonts = {
+  // Frost Imperial (handwritten) carries titles/subtitles only — it has no
+  // second weight, and reads poorly at body sizes. Work Sans, a humanist
+  // sans, carries everything else so it stays legible.
   display: 'FrostImperial',
   displayBold: 'FrostImperial',
-  sans: 'FrostImperial',
-  sansMedium: 'FrostImperial',
+  sans: 'WorkSans_400Regular',
+  sansMedium: 'WorkSans_600SemiBold',
   mono: Platform.select({ ios: 'ui-monospace', default: 'monospace' }),
 };
 
