@@ -26,6 +26,11 @@ workflows:
       cocoapods: default
       vars:
         IOS_BUNDLE_IDENTIFIER: com.connorst.app
+        # Supabase anon/publishable key — public by design (RLS does the real
+        # access control), safe to commit. Shared project with Tenant
+        # Passport; this app's data lives in its own `connorst` schema.
+        EXPO_PUBLIC_SUPABASE_URL: https://txgtsefuqfxdfgdmfscw.supabase.co
+        EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_Mx5B_oT_dFKYuPjX2PlN_g_aMyD1xVs
 
     scripts:
       - name: Print iOS signing assets detected by Codemagic
