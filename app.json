@@ -10,7 +10,8 @@
     "backgroundColor": "#B5ADA2",
     "ios": {
       "icon": "./assets/expo.icon",
-      "backgroundColor": "#B5ADA2"
+      "backgroundColor": "#B5ADA2",
+      "bundleIdentifier": "com.connorst.app"
     },
     "android": {
       "adaptiveIcon": {

@@ -1,0 +1,100 @@
+workflows:
+  expo-ios:
+    name: Expo iOS
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: codemagicFlutter
+
+    environment:
+      # MANUAL code signing — use the certificate + provisioning profile that
+      # were uploaded to Codemagic (Teams → Code signing identities), referenced
+      # here by their Reference names. With references you must NOT set
+      # distribution_type / bundle_identifier.
+      ios_signing:
+        provisioning_profiles:
+          - profile: "ConnorST"    # com.connorst.app
+        certificates:
+          - certificate: "codemagicFlutter"
+      groups:
+        - Ios_signing
+      node: latest
+      # Use the latest Xcode so we build against the current iOS SDK — Apple
+      # rejects App Store / TestFlight uploads built with an older one.
+      xcode: latest
+      cocoapods: default
+      vars:
+        IOS_BUNDLE_IDENTIFIER: com.connorst.app
+
+    scripts:
+      - name: Print iOS signing assets detected by Codemagic
+        script: |
+          echo "== Code signing identities (name + SHA-1) =="
+          security find-identity -v -p codesigning || true
+
+          echo
+          echo "== Provisioning profiles available =="
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          if [[ -d "$PROFILE_DIR" ]]; then
+            find "$PROFILE_DIR" -name "*.mobileprovision" -maxdepth 1 | while read -r profile; do
+              echo
+              echo "Profile file: $(basename "$profile")"
+              security cms -D -i "$profile" > /tmp/codemagic_profile.plist
+              /usr/libexec/PlistBuddy -c "Print :Name" /tmp/codemagic_profile.plist || true
+              /usr/libexec/PlistBuddy -c "Print :UUID" /tmp/codemagic_profile.plist || true
+              /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" /tmp/codemagic_profile.plist || true
+            done
+          else
+            echo "No provisioning profiles directory found at $PROFILE_DIR"
+          fi
+
+      - name: Install dependencies (npm)
+        script: |
+          npm ci
+
+      - name: Set unique build number
+        script: |
+          # Unix timestamp => always higher than the last upload, so App Store
+          # Connect never rejects a build for a duplicate version. Applied to the
+          # native project below (agvtool), after prebuild.
+          echo "CST_BUILD_NUMBER=$(date +%s)" >> $CM_ENV
+
+      - name: Expo prebuild iOS
+        script: |
+          npx expo prebuild --platform ios --clean
+
+      - name: Apply build number (CFBundleVersion)
+        script: |
+          # app.json has no dynamic build number, so set CFBundleVersion here.
+          cd ios
+          agvtool new-version -all "$CST_BUILD_NUMBER"
+
+      - name: Apply provisioning profiles to the project
+        script: |
+          # The certificate + profile come from the ios_signing references above
+          # (Codemagic installs them automatically). Just point the Xcode project
+          # at them for manual signing.
+          cd ios
+          xcode-project use-profiles
+
+      - name: Install iOS pods
+        script: |
+          cd ios
+          pod install --repo-update
+
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/*.xcworkspace \
+            --scheme ConnorsStringTheory \
+            --config Release
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
