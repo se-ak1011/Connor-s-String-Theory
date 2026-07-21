@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, type Href } from 'expo-router';
 import { Image, type ImageProps } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -10,42 +9,21 @@ import Animated, {
   useSharedValue,
   withDelay,
   withRepeat,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
 
-import { ThemedText } from '@/components/themed-text';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Radius } from '@/constants/theme';
 
 /**
- * The Home hero: a central mascot illustration with four chips arranged
- * around it, radially — the pattern used across the rest of the Sends
- * family (Hassle's Lola, Alchono's companion).
+ * The Home hero: just Pickles, tappable — a haptic bump, ringed by a slow
+ * sonar pulse in Colors.complement (the one deliberate purple touch,
+ * reserved for haptic/interactive moments). He doesn't move on tap; the
+ * ring + haptic alone signal "this is interactive."
  *
  * `mascotSource` falls back to a paw-icon placeholder when omitted —
  * useful for previewing layout changes without the real asset.
- *
- * The character is tappable — a haptic bump plus a little bounce — and
- * ringed by a slow sonar pulse in Colors.complement (the one deliberate
- * purple touch, reserved for haptic/interactive moments) to signal
- * "this is interactive," a nod to Lola's own pulse in Hassle.
  */
-
-type ClusterChip = {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  href: Href;
-  highlight?: boolean;
-};
-
-const CHIPS: [ClusterChip, ClusterChip, ClusterChip, ClusterChip] = [
-  { label: 'Meet Pickles', icon: 'paw', href: '/meet-pickles' },
-  { label: 'Services', icon: 'list', href: '/book' },
-  { label: 'Meet Connor', icon: 'chatbubble-ellipses', href: '/contact' },
-  { label: 'Book a session', icon: 'calendar', href: '/book', highlight: true },
-];
 
 type MascotClusterProps = {
   mascotSource?: ImageProps['source'];
@@ -54,7 +32,6 @@ type MascotClusterProps = {
 export function MascotCluster({ mascotSource }: MascotClusterProps) {
   const reducedMotion = useReducedMotion();
   const breathe = useSharedValue(0);
-  const pressScale = useSharedValue(1);
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -62,24 +39,17 @@ export function MascotCluster({ mascotSource }: MascotClusterProps) {
   }, [breathe, reducedMotion]);
 
   const characterStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: (1 + breathe.value * 0.035) * pressScale.value }],
+    transform: [{ scale: 1 + breathe.value * 0.035 }],
   }));
 
   function handlePress() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    pressScale.value = withSequence(
-      withTiming(0.92, { duration: 90, easing: Easing.out(Easing.quad) }),
-      withSpring(1, { damping: 7, stiffness: 220 }),
-    );
   }
 
   return (
     <View style={styles.cluster}>
-      <Chip chip={CHIPS[0]} style={styles.topLeft} />
-      <Chip chip={CHIPS[1]} style={styles.topRight} />
-
       <View style={styles.characterWrap} pointerEvents="box-none">
         {!reducedMotion && (
           <>
@@ -101,9 +71,6 @@ export function MascotCluster({ mascotSource }: MascotClusterProps) {
           </Animated.View>
         </Pressable>
       </View>
-
-      <Chip chip={CHIPS[2]} style={styles.bottomLeft} />
-      <Chip chip={CHIPS[3]} style={styles.bottomRight} />
     </View>
   );
 }
@@ -124,29 +91,6 @@ function PulseRing({ delay }: { delay: number }) {
   }));
 
   return <Animated.View pointerEvents="none" style={[styles.ring, ringStyle]} />;
-}
-
-function Chip({ chip, style }: { chip: ClusterChip; style: object }) {
-  return (
-    <View style={style}>
-      <Pressable
-        onPress={() => router.push(chip.href)}
-        style={({ pressed }) => [
-          styles.chip,
-          chip.highlight && styles.chipHighlight,
-          pressed && styles.chipPressed,
-        ]}>
-        <Ionicons
-          name={chip.icon}
-          size={14}
-          color={chip.highlight ? Colors.onAccent : Colors.accent}
-        />
-        <ThemedText type="small" themeColor={chip.highlight ? 'onAccent' : 'text'}>
-          {chip.label}
-        </ThemedText>
-      </Pressable>
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({
@@ -199,27 +143,5 @@ const styles = StyleSheet.create({
   mascotImage: {
     width: '100%',
     height: '100%',
-  },
-  topLeft: { position: 'absolute', top: '4%', left: 0 },
-  topRight: { position: 'absolute', top: '4%', right: 0 },
-  bottomLeft: { position: 'absolute', bottom: '6%', left: 0 },
-  bottomRight: { position: 'absolute', bottom: '6%', right: 0 },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one,
-    backgroundColor: Colors.backgroundElement,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.pill,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
-  },
-  chipHighlight: {
-    backgroundColor: Colors.accent,
-    borderColor: Colors.accent,
-  },
-  chipPressed: {
-    opacity: 0.75,
   },
 });
