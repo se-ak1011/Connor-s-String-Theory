@@ -5,18 +5,26 @@
  *
  * Prices below are placeholders — swap in real numbers before launch.
  *
- * This is a dog training business, not a dog walking service — the walk
- * is the vehicle, not the product. Keep copy calm and plain; avoid hype
- * ("transform your dog", "unlock their potential") and avoid over-selling
- * the walking itself.
+ * Connor's String Theory is a training philosophy, not a generic obedience
+ * service: where the head goes, the body follows. Sessions work on a dog's
+ * attention first, because attention is what movement and behaviour follow.
+ * The string — a light lead positioned high on the neck — is the method's
+ * signature tool, not the method itself; it makes the conversation between
+ * dog and handler clearer, nothing more. Never describe it as something
+ * that holds, forces or corrects a dog into position.
+ *
+ * Keep copy calm, plain and explanatory — educate before you sell. Avoid
+ * hype ("transform your dog", "unlock their potential"), clichés ("pulls
+ * like a steam train"), military or dominance language ("pack leader",
+ * "corrections", "obedience"), and exaggerated claims.
  */
 
 export const business = {
   name: "Connor's String Theory",
-  tagline: 'Real-world training. A calmer, more capable dog.',
+  tagline: 'Where the head goes, the body follows.',
   trainerName: 'Connor',
   intro:
-    "Connor's String Theory isn't a dog walking service — it's dog training, delivered through real walks, play and structured time together. Each session is shaped around your dog: what they find hard, what they're ready to work on next. They come home tired, but they also come home having learned something.",
+    "Connor's String Theory is a training philosophy, not a walking service. Every session works from one idea outward: attention shapes movement, movement shapes behaviour, and lasting change comes through clear communication and consistency — not force.",
   serviceArea: 'Serving the local area and surrounding villages — get in touch to check your postcode.',
   contact: {
     // TODO: replace with Connor's real contact details before launch.
@@ -24,6 +32,14 @@ export const business = {
     phone: '07000 000000',
     instagram: '@connorsstringtheory',
   },
+};
+
+export const philosophy = {
+  title: 'Why String Theory?',
+  intro:
+    "It starts from a simple observation: a dog whose head is fixed on something is already halfway to reacting to it, long before a lead goes tight. So instead of managing the outcome — the pulling, the jumping, the bolting — String Theory works upstream, on where a dog's attention is and where it's going next.",
+  toolNote:
+    "The string — a light lead positioned high on the neck — is the signature tool of the method, not the method itself. It doesn't hold a dog in place or do the training for you. It simply makes the conversation between dog and handler clearer, so attention, movement and behaviour can be shaped together, through consistency and understanding rather than force.",
 };
 
 export const focusAreas = [
@@ -59,7 +75,7 @@ export const services: Service[] = [
     name: 'Taster Session',
     tagline: 'Start here',
     description:
-      "A one-off session where Connor spends real time with your dog — walking, observing, working through a few things — and gives you an honest read on what's achievable and what it'll take. No commitment.",
+      "A one-off session where Connor spends real time with your dog — watching where their attention goes, working through a few things, and giving you an honest read on what's achievable and what it'll take. No commitment.",
     duration: '45 minutes',
     price: '£30',
     priceNote: 'one-off',
@@ -68,9 +84,9 @@ export const services: Service[] = [
   {
     id: 'ongoing',
     name: 'Ongoing Training',
-    tagline: 'The standing slot most dogs need',
+    tagline: 'Same time, every week',
     description:
-      'The same time, every week. Consistency is what actually builds new habits — whatever your dog is working on, this is where it sticks. Sessions adapt as they progress.',
+      'Consistency is what turns attention into habit — whatever your dog is working on, this is where it gets built. Sessions adapt as they progress, week to week.',
     duration: '45–60 minutes',
     price: '£35',
     priceNote: 'per session, billed weekly',
@@ -80,9 +96,9 @@ export const services: Service[] = [
   {
     id: 'owner-coaching',
     name: 'Owner Coaching',
-    tagline: 'You, learning to lead',
+    tagline: 'You, learning the method',
     description:
-      "You work with your own dog, and Connor coaches you through it. The goal isn't a dog that only listens to him — it's teaching you how to build that same relationship yourself.",
+      "You work directly with your own dog, and Connor coaches you through it — reading where their attention is, and how to guide it yourself. The goal isn't a dog that only responds to him; it's you and your dog understanding each other.",
     duration: '60 minutes',
     price: '£40',
     priceNote: 'per session',
@@ -93,7 +109,7 @@ export const services: Service[] = [
     name: 'Social Session with Pickles',
     tagline: 'Structured time with a calm, trained dog',
     description:
-      "Controlled interaction with Pickles — not a free-for-all play session. It's used to build confidence, neutrality and engagement around another dog, at a pace that suits yours.",
+      "Structured time with Pickles — not a free-for-all play session. It's used to build confidence and calm attention around another dog, at a pace that suits yours.",
     duration: '30–45 minutes',
     price: '£25',
     priceNote: 'per session',
@@ -112,7 +128,7 @@ export const pickles: PicklesProfile = {
   name: 'Pickles',
   breed: '~55% Belgian Malinois × German Shepherd',
   story:
-    "Pickles is the reason Connor's String Theory exists. A working-line dog with serious drive — the kind that could easily turn into a handful — raised from a puppy using the same calm, consistent methods Connor now teaches to other owners. By nine months old he was walking loose-lead, waiting at kerbs, and switching off around distractions that would send most dogs into overdrive. He's not a mascot bolted on afterwards — he's the proof the method works, and he still comes on sessions today.",
+    "Pickles is where String Theory started. A working-line dog with serious drive, he's the kind of dog whose attention snaps onto everything — and takes his body with it. Connor raised him on the same principle he now teaches to other owners: work with where a dog's head goes, not against where their body ends up. The string, positioned high on his neck, was never about holding him back — it gave Connor a clearer way to guide his attention, session by session, until it became habit. By nine months old, Pickles was walking loose-lead, waiting at kerbs, and switching off around distractions that would send most dogs into overdrive. He's not a mascot bolted on afterwards — he's where the method was built, and he still comes to sessions today.",
   trainedIn: ['Loose-lead walking', 'Impulse control', 'Kerb & traffic manners', 'Calm in high-stimulation environments'],
 };
 
@@ -132,9 +148,9 @@ export const clientDogs: ClientDog[] = [
     name: 'Bean',
     breed: 'Chihuahua',
     challenge:
-      'Loose-lead walking on a tiny stride, and staying focused around food on the pavement — both easy for a small, food-motivated dog to struggle with.',
+      'Loose-lead walking on a tiny stride, and holding focus around food on the pavement — both easy for a small, food-motivated dog to lose to distraction.',
     progress:
-      'Walks loose-lead consistently, waits at every kerb without being asked twice, and ignores food distractions that would normally stop her in her tracks.',
+      'Walks loose-lead consistently, waits at every kerb without being asked twice, and holds her attention past food distractions that would normally stop her in her tracks.',
   },
 ];
 
@@ -142,14 +158,24 @@ export type FaqItem = { question: string; answer: string };
 
 export const faqs: FaqItem[] = [
   {
-    question: 'My dog pulls like a steam train — can you actually fix that?',
+    question: 'What is String Theory, exactly?',
     answer:
-      "Almost always, yes. Loose-lead walking is trained through real walks, not a one-off lesson — that's the whole idea behind Connor's String Theory. Book a taster and Connor will give you an honest read on timelines for your dog specifically.",
+      "It's Connor's training philosophy, built around one idea: where the head goes, the body follows. Sessions work on a dog's attention first — because attention is what shapes movement, and movement is what shapes behaviour — using clear communication and consistency rather than force.",
+  },
+  {
+    question: 'Does the string hold or force my dog into position?',
+    answer:
+      "No. It's positioned high on the neck to make the connection between the lead and your dog's attention clearer — not to hold, drag or correct them into place. It's a communication tool, not a control device; the training itself happens through consistency and understanding.",
+  },
+  {
+    question: 'My dog pulls a lot on the lead — can training actually help?',
+    answer:
+      "In most cases, yes. Pulling is trained out through consistent real-world walks, not a single lesson — that's the core of how String Theory works. Book a taster and Connor will give you an honest read on timelines for your dog specifically.",
   },
   {
     question: "What's a Social Session with Pickles?",
     answer:
-      "Structured, calm interaction with Pickles — not a play session. It's used to build your dog's confidence and neutrality around another dog, at whatever pace makes sense for them.",
+      "Structured, calm time with Pickles — not a play session. It's used to build your dog's confidence and calm attention around another dog, at whatever pace makes sense for them.",
   },
   {
     question: 'Can I be involved, or does Connor just work with my dog alone?',

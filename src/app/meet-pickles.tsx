@@ -42,7 +42,7 @@ export default function MeetPicklesScreen() {
       <View style={styles.section}>
         <ThemedText type="subtitle">Dogs we've worked with</ThemedText>
         <ThemedText themeColor="textSecondary" type="small">
-          Real dogs, real starting points, real progress.
+          A few of the dogs Connor has worked with, and where they've gotten to.
         </ThemedText>
 
         {clientDogs.map((dog) => (
@@ -86,8 +86,7 @@ export default function MeetPicklesScreen() {
         ))}
 
         <ThemedText themeColor="textMuted" type="small" style={styles.centerText}>
-          More dogs — and their owners' words — will go here as Connor's String Theory takes on
-          new clients.
+          More dogs — and their owners' words — will be added here as new sessions begin.
         </ThemedText>
       </View>
     </Screen>

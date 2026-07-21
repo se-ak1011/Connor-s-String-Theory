@@ -7,7 +7,7 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { business, focusAreas, services } from '@/constants/business';
+import { business, focusAreas, philosophy, services } from '@/constants/business';
 import { Colors, Spacing } from '@/constants/theme';
 
 export default function HomeScreen() {
@@ -25,6 +25,16 @@ export default function HomeScreen() {
 
         <ThemedText themeColor="textSecondary" style={styles.centerText}>
           {business.intro}
+        </ThemedText>
+      </View>
+
+      <View style={styles.section}>
+        <ThemedText type="subtitle">{philosophy.title}</ThemedText>
+        <ThemedText themeColor="textSecondary" type="small">
+          {philosophy.intro}
+        </ThemedText>
+        <ThemedText themeColor="textSecondary" type="small">
+          {philosophy.toolNote}
         </ThemedText>
       </View>
 
@@ -78,9 +88,9 @@ export default function HomeScreen() {
           The dog behind the method
         </ThemedText>
         <ThemedText themeColor="textSecondary">
-          Pickles — Connor's own dog — is a high-drive Belgian Malinois cross who could easily
-          have turned into a handful. Instead, he's living proof of what these methods actually
-          produce.
+          Pickles — Connor's own dog — is a high-drive Belgian Malinois cross whose attention
+          could easily run the show. String Theory was built around him, session by session,
+          until calm, focused attention became the default.
         </ThemedText>
         <Button label="Meet Pickles" variant="secondary" onPress={() => router.push('/meet-pickles')} />
       </Card>
@@ -90,9 +100,9 @@ export default function HomeScreen() {
           Meet your trainer
         </ThemedText>
         <ThemedText themeColor="textSecondary">
-          {business.trainerName} trains every dog personally, and where it helps, he trains
-          owners too — the goal is a relationship that works without him there.{' '}
-          {business.serviceArea}
+          {business.trainerName} trains every dog personally, and where it helps, he coaches
+          owners too — the goal is a dog and handler who understand each other without him
+          there. {business.serviceArea}
         </ThemedText>
         <Button label="Get in touch" variant="secondary" onPress={() => router.push('/contact')} />
       </Card>

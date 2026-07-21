@@ -56,11 +56,13 @@ export default function ContactScreen() {
           About {business.trainerName}
         </ThemedText>
         <ThemedText themeColor="textSecondary">
-          {business.trainerName} doesn't just walk dogs — he develops them. Every session works
-          toward a dog that's calmer, more confident and better behaved, using the same methods
-          that took Bean, a food-motivated chihuahua, and Pickles, a high-drive working-line
-          cross, to genuinely well-mannered dogs. Some sessions he works with your dog directly;
-          others, he coaches you to do it yourself.
+          {business.trainerName} developed String Theory around one idea: a dog's body follows
+          its head, so real training starts with attention, not force. It's why every
+          session — whether it's loose-lead walking, recall, or calm behaviour around
+          distraction — starts with reading where a dog's focus is, then working from there.
+          Bean, a food-motivated chihuahua, and Pickles, a high-drive working-line cross, both
+          learned the same way: through consistency and clear communication. Some sessions he
+          works with your dog directly; others, he coaches you to do it yourself.
         </ThemedText>
         <ThemedText themeColor="textSecondary" type="small">
           {business.serviceArea}
