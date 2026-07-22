@@ -16,6 +16,11 @@ type AuthContextValue = {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  // True whenever a session exists but its profile (and therefore role)
+  // hasn't resolved yet — the root layout waits on this before deciding
+  // between the client portal and the trainer portal, so a trainer never
+  // flashes the client UI for a frame first.
+  profileLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
     email: string,
@@ -42,6 +47,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -73,18 +79,19 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!session?.user) {
       setProfile(null);
+      setProfileLoading(false);
       return;
     }
 
     let cancelled = false;
-    supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single()
-      .then(({ data }) => {
-        if (!cancelled) setProfile(data ? mapProfile(data) : null);
-      });
+    setProfileLoading(true);
+
+    (async () => {
+      const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+      if (cancelled) return;
+      setProfile(data ? mapProfile(data) : null);
+      setProfileLoading(false);
+    })();
 
     return () => {
       cancelled = true;
@@ -126,6 +133,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         user: session?.user ?? null,
         profile,
         loading,
+        profileLoading,
         signIn,
         signUp,
         signOut,

@@ -4,6 +4,11 @@
 -- running this file:
 --   1. Project Settings → API → Exposed schemas → add `connorst`.
 --   2. Storage → New bucket → name `connorst-media`, private.
+--
+-- This file is "what a fresh database looks like" — it's already been run
+-- against the live project. Once that's true, re-running it whole would
+-- fail (CREATE TABLE/POLICY on things that already exist), so anything
+-- new from here on is a numbered file in supabase/migrations/ instead.
 
 create schema if not exists connorst;
 

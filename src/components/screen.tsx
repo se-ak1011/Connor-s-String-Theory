@@ -28,7 +28,12 @@ export function Screen({ children, refreshing, onRefresh }: ScreenProps) {
           style={[
             styles.inner,
             {
-              paddingTop: (Platform.OS === 'web' ? Spacing.six : insets.top) + Spacing.four,
+              // Math.max guards against the first-render frame where
+              // safe-area insets can briefly report 0 before the native
+              // measurement arrives (most visible right after a screen
+              // transition) — without it, content can flash flush against
+              // the status bar for a frame.
+              paddingTop: (Platform.OS === 'web' ? Spacing.six : Math.max(insets.top, 24)) + Spacing.four,
               paddingBottom: insets.bottom + BottomTabInset + Spacing.five,
             },
           ]}>

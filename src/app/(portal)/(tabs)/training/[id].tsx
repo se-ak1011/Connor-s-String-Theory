@@ -40,17 +40,18 @@ export default function HomeworkDetailScreen() {
   if (!item) {
     return (
       <Screen>
-        <BackLink fallbackHref="/training" />
-        <ThemedText themeColor="textMuted">Loading…</ThemedText>
+        <View style={styles.loadingHeader}>
+          <BackLink fallbackHref="/training" />
+          <ThemedText themeColor="textMuted">Loading…</ThemedText>
+        </View>
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <BackLink fallbackHref="/training" />
-
       <View style={styles.header}>
+        <BackLink fallbackHref="/training" />
         <ThemedText type="title">{item.title}</ThemedText>
         {item.exercise?.category && (
           <ThemedText themeColor="textSecondary">{item.exercise.category}</ThemedText>
@@ -113,6 +114,9 @@ export default function HomeworkDetailScreen() {
 
 const styles = StyleSheet.create({
   header: {
+    gap: Spacing.two,
+  },
+  loadingHeader: {
     gap: Spacing.two,
   },
   card: {

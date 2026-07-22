@@ -1,3 +1,5 @@
+import * as ImagePicker from 'expo-image-picker';
+
 import { supabase } from '@/lib/supabase';
 
 export type Dog = {
@@ -6,6 +8,8 @@ export type Dog = {
   name: string;
   breed: string | null;
   dateOfBirth: string | null;
+  // Always a resolved, displayable signed URL (or null) — never the raw
+  // storage path. See resolvePhotoUrl below for why.
   photoUrl: string | null;
   medicalNotes: string | null;
   emergencyContactName: string | null;
@@ -20,14 +24,28 @@ export type NotificationPrefs = {
   sessionReminders: boolean;
 };
 
-function mapDog(row: any): Dog {
+const MEDIA_BUCKET = 'connorst-media';
+
+/**
+ * dogs.photo_url stores a Storage *path*, not a public URL — the bucket is
+ * private, so every read needs a freshly-signed URL. A signed URL would
+ * eventually expire if we stored it directly, silently breaking the photo
+ * that's supposed to be the first thing a client sees on Home.
+ */
+async function resolvePhotoUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  const { data } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 60 * 60 * 24 * 7);
+  return data?.signedUrl ?? null;
+}
+
+async function mapDog(row: any): Promise<Dog> {
   return {
     id: row.id,
     userId: row.user_id,
     name: row.name,
     breed: row.breed,
     dateOfBirth: row.date_of_birth,
-    photoUrl: row.photo_url,
+    photoUrl: await resolvePhotoUrl(row.photo_url),
     medicalNotes: row.medical_notes,
     emergencyContactName: row.emergency_contact_name,
     emergencyContactPhone: row.emergency_contact_phone,
@@ -77,25 +95,51 @@ export async function updateDog(
   patch: Partial<{
     breed: string;
     dateOfBirth: string;
-    photoUrl: string;
+    photoPath: string;
     medicalNotes: string;
     emergencyContactName: string;
     emergencyContactPhone: string;
   }>,
 ): Promise<void> {
-  const { error } = await supabase
-    .from('dogs')
-    .update({
-      breed: patch.breed,
-      date_of_birth: patch.dateOfBirth,
-      photo_url: patch.photoUrl,
-      medical_notes: patch.medicalNotes,
-      emergency_contact_name: patch.emergencyContactName,
-      emergency_contact_phone: patch.emergencyContactPhone,
-    })
-    .eq('id', dogId);
+  const updates: Record<string, unknown> = {};
+  if (patch.breed !== undefined) updates.breed = patch.breed;
+  if (patch.dateOfBirth !== undefined) updates.date_of_birth = patch.dateOfBirth;
+  if (patch.photoPath !== undefined) updates.photo_url = patch.photoPath;
+  if (patch.medicalNotes !== undefined) updates.medical_notes = patch.medicalNotes;
+  if (patch.emergencyContactName !== undefined) updates.emergency_contact_name = patch.emergencyContactName;
+  if (patch.emergencyContactPhone !== undefined) updates.emergency_contact_phone = patch.emergencyContactPhone;
 
+  const { error } = await supabase.from('dogs').update(updates).eq('id', dogId);
   if (error) throw new Error(error.message);
+}
+
+/**
+ * Picks a photo from the library and uploads it as this dog's profile
+ * photo, under the same private bucket/path convention as lib/media.ts
+ * (first path segment = owner's user id, so the existing Storage RLS
+ * policies already cover this without any new policy).
+ */
+export async function pickAndUploadDogPhoto(userId: string, dogId: string): Promise<string | null> {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) return null;
+
+  const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
+  if (result.canceled || !result.assets[0]) return null;
+
+  const asset = result.assets[0];
+  const ext = asset.uri.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const path = `${userId}/dog-${dogId}-${Date.now()}.${ext}`;
+
+  const response = await fetch(asset.uri);
+  const arrayBuffer = await response.arrayBuffer();
+
+  const { error: uploadError } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .upload(path, arrayBuffer, { contentType: asset.mimeType ?? 'image/jpeg' });
+  if (uploadError) throw new Error(uploadError.message);
+
+  await updateDog(dogId, { photoPath: path });
+  return resolvePhotoUrl(path);
 }
 
 export async function updateProfile(userId: string, fullName: string): Promise<void> {

@@ -47,8 +47,10 @@ export default function SessionDetailScreen() {
   if (!booking) {
     return (
       <Screen>
-        <BackLink fallbackHref="/sessions" />
-        <ThemedText themeColor="textMuted">Loading…</ThemedText>
+        <View style={styles.loadingHeader}>
+          <BackLink fallbackHref="/sessions" />
+          <ThemedText themeColor="textMuted">Loading…</ThemedText>
+        </View>
       </Screen>
     );
   }
@@ -58,9 +60,8 @@ export default function SessionDetailScreen() {
 
   return (
     <Screen>
-      <BackLink fallbackHref="/sessions" />
-
       <View style={styles.header}>
+        <BackLink fallbackHref="/sessions" />
         <ThemedText type="title">{booking.serviceName}</ThemedText>
         <ThemedText themeColor="textSecondary">
           {booking.date} at {booking.time}
@@ -112,6 +113,9 @@ export default function SessionDetailScreen() {
 
 const styles = StyleSheet.create({
   header: {
+    gap: Spacing.two,
+  },
+  loadingHeader: {
     gap: Spacing.two,
   },
   card: {

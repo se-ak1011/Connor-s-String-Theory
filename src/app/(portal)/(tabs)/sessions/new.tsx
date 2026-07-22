@@ -95,9 +95,8 @@ export default function NewSessionScreen() {
 
   return (
     <Screen>
-      <BackLink fallbackHref="/sessions" />
-
       <View style={styles.header}>
+        <BackLink fallbackHref="/sessions" />
         <ThemedText type="title">Book a session</ThemedText>
         <ThemedText themeColor="textSecondary">
           Pick a session and a slot that works — {dog?.name ?? 'your dog'}'s details come from your profile.

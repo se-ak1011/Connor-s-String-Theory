@@ -52,9 +52,8 @@ export default function ProgressScreen() {
 
   return (
     <Screen refreshing={loading} onRefresh={load}>
-      <BackLink label="Home" fallbackHref="/" />
-
       <View style={styles.header}>
+        <BackLink label="Home" fallbackHref="/" />
         <ThemedText type="title">Progress</ThemedText>
         <ThemedText themeColor="textSecondary">A record of how far you've come together — not a scoreboard.</ThemedText>
       </View>

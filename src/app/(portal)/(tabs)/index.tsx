@@ -69,23 +69,6 @@ export default function PortalHomeScreen() {
     }
   }
 
-  // No trainer UI is being built this pass — a bare client dashboard would
-  // just look broken for Connor's own account (no dog, no bookings), so he
-  // gets a distinct, honest placeholder instead.
-  if (profile?.role === 'trainer') {
-    return (
-      <Screen>
-        <View style={styles.header}>
-          <ThemedText type="title">Trainer view</ThemedText>
-          <ThemedText themeColor="textSecondary">
-            The trainer side of the portal isn't built yet — for now, manage clients from the Supabase
-            dashboard.
-          </ThemedText>
-        </View>
-      </Screen>
-    );
-  }
-
   return (
     <Screen refreshing={loading} onRefresh={load}>
       <View style={styles.header}>

@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Share, StyleSheet, Switch, View } from 'react-native';
@@ -8,12 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PointsBadge } from '@/components/ui/points-badge';
 import { TextField } from '@/components/ui/text-field';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { fetchPointBalance, type PointBalance } from '@/lib/points';
 import {
   createDog,
   fetchMyDog,
+  pickAndUploadDogPhoto,
   updateDog,
   updateNotificationPrefs,
   type Dog,
@@ -38,6 +40,8 @@ export default function ProfileScreen() {
   const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
   const [balance, setBalance] = useState<PointBalance | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -58,11 +62,14 @@ export default function ProfileScreen() {
   async function handleAddDog() {
     if (!user || !newDogName.trim()) return;
     setSaving(true);
+    setError(null);
     try {
       const created = await createDog(user.id, { name: newDogName.trim(), breed: newDogBreed.trim() || undefined });
       setDog(created);
       setNewDogName('');
       setNewDogBreed('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not add your dog — try again.');
     } finally {
       setSaving(false);
     }
@@ -71,14 +78,31 @@ export default function ProfileScreen() {
   async function handleSaveDogDetails() {
     if (!dog) return;
     setSaving(true);
+    setError(null);
     try {
       await updateDog(dog.id, {
         medicalNotes,
         emergencyContactName: emergencyName,
         emergencyContactPhone: emergencyPhone,
       });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save — try again.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handlePickPhoto() {
+    if (!user || !dog) return;
+    setUploadingPhoto(true);
+    setError(null);
+    try {
+      const photoUrl = await pickAndUploadDogPhoto(user.id, dog.id);
+      if (photoUrl) setDog({ ...dog, photoUrl });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not upload that photo — try again.');
+    } finally {
+      setUploadingPhoto(false);
     }
   }
 
@@ -108,6 +132,20 @@ export default function ProfileScreen() {
         </ThemedText>
         {dog ? (
           <>
+            <View style={styles.photoRow}>
+              {dog.photoUrl ? (
+                <Image source={{ uri: dog.photoUrl }} style={styles.photo} contentFit="cover" />
+              ) : (
+                <View style={styles.photoPlaceholder} />
+              )}
+              <Button
+                label={dog.photoUrl ? 'Change photo' : 'Add photo'}
+                variant="secondary"
+                onPress={handlePickPhoto}
+                loading={uploadingPhoto}
+                style={styles.photoButton}
+              />
+            </View>
             <ThemedText type="default">{dog.name}</ThemedText>
             {dog.breed && (
               <ThemedText type="small" themeColor="textSecondary">
@@ -137,6 +175,11 @@ export default function ProfileScreen() {
             <TextField label="Breed" value={newDogBreed} onChangeText={setNewDogBreed} autoCapitalize="words" />
             <Button label="Add dog" onPress={handleAddDog} disabled={!newDogName.trim()} loading={saving} />
           </>
+        )}
+        {error && (
+          <ThemedText type="small" themeColor="attention">
+            {error}
+          </ThemedText>
         )}
       </Card>
 
@@ -194,6 +237,25 @@ const styles = StyleSheet.create({
   multiline: {
     minHeight: 70,
     textAlignVertical: 'top',
+  },
+  photoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  photo: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.medium,
+  },
+  photoPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.medium,
+    backgroundColor: Colors.accentSoft,
+  },
+  photoButton: {
+    flexShrink: 1,
   },
   pointsCard: {
     gap: Spacing.two,

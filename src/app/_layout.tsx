@@ -24,11 +24,16 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { session, loading } = useAuth();
+  const { session, loading, profile, profileLoading } = useAuth();
 
-  // Splash overlay covers this brief window — nothing renders underneath
-  // until we actually know which side of the gate to show.
-  if (loading) return null;
+  // Splash overlay covers both windows — nothing renders underneath until
+  // we know which side of the gate to show, and (once logged in) which
+  // role's portal that is. Without waiting on profileLoading too, a
+  // trainer would flash the client portal for a frame before their role
+  // resolves.
+  if (loading || (!!session && profileLoading)) return null;
+
+  const isTrainer = profile?.role === 'trainer';
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -36,17 +41,22 @@ function RootNavigator() {
         <Stack.Screen name="(public)" />
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
-      <Stack.Protected guard={!!session}>
+      <Stack.Protected guard={!!session && !isTrainer}>
         <Stack.Screen name="(portal)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session && isTrainer}>
+        <Stack.Screen name="(trainer)" />
       </Stack.Protected>
     </Stack>
   );
 }
 
-// Small wrapper so the splash stays up until BOTH fonts and the auth
-// session check have resolved — otherwise it can drop away before
-// RootNavigator knows whether to show the public site or the portal.
+// Small wrapper so the splash stays up until fonts, the auth session
+// check, AND (if logged in) the profile/role fetch have all resolved —
+// otherwise it can drop away before RootNavigator knows which portal to
+// show.
 function SplashOverlayGate({ fontsLoaded }: { fontsLoaded: boolean }) {
-  const { loading: authLoading } = useAuth();
-  return <SplashOverlay ready={fontsLoaded && !authLoading} />;
+  const { loading: authLoading, session, profileLoading } = useAuth();
+  const ready = fontsLoaded && !authLoading && !(session && profileLoading);
+  return <SplashOverlay ready={ready} />;
 }

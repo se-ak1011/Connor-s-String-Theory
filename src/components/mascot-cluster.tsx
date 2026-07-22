@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image, type ImageProps } from 'expo-image';
 import * as Haptics from 'expo-haptics';
+import { router, type Href } from 'expo-router';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -11,9 +12,10 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import { Colors, Radius } from '@/constants/theme';
+import { ThemedText } from '@/components/themed-text';
+import { Colors, Radius, Spacing } from '@/constants/theme';
 
 /**
  * The Home hero: just Pickles, tappable — a haptic bump, ringed by a slow
@@ -23,15 +25,30 @@ import { Colors, Radius } from '@/constants/theme';
  *
  * `mascotSource` falls back to a paw-icon placeholder when omitted —
  * useful for previewing layout changes without the real asset.
+ *
+ * `chips`, when provided (trainer Home only — the public/client Home
+ * passes none), turns a tap into a toggle: the same haptic fires, and up
+ * to three destination chips fade/scale in around him instead of nothing
+ * happening. Tapping again (or a chip itself) hides them.
  */
+
+export type ClusterChip = {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  href: Href;
+};
 
 type MascotClusterProps = {
   mascotSource?: ImageProps['source'];
+  chips?: ClusterChip[];
 };
 
-export function MascotCluster({ mascotSource }: MascotClusterProps) {
+const CHIP_SLOTS = ['top', 'bottomLeft', 'bottomRight'] as const;
+
+export function MascotCluster({ mascotSource, chips }: MascotClusterProps) {
   const reducedMotion = useReducedMotion();
   const breathe = useSharedValue(0);
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -45,6 +62,9 @@ export function MascotCluster({ mascotSource }: MascotClusterProps) {
   function handlePress() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    if (chips && chips.length > 0) {
+      setRevealed((prev) => !prev);
     }
   }
 
@@ -71,7 +91,50 @@ export function MascotCluster({ mascotSource }: MascotClusterProps) {
           </Animated.View>
         </Pressable>
       </View>
+
+      {chips?.slice(0, 3).map((chip, index) => (
+        <Chip key={chip.label} chip={chip} slot={CHIP_SLOTS[index]} revealed={revealed} onNavigate={() => setRevealed(false)} />
+      ))}
     </View>
+  );
+}
+
+function Chip({
+  chip,
+  slot,
+  revealed,
+  onNavigate,
+}: {
+  chip: ClusterChip;
+  slot: (typeof CHIP_SLOTS)[number];
+  revealed: boolean;
+  onNavigate: () => void;
+}) {
+  const reveal = useSharedValue(0);
+
+  useEffect(() => {
+    reveal.value = withTiming(revealed ? 1 : 0, { duration: 220, easing: Easing.out(Easing.quad) });
+  }, [revealed, reveal]);
+
+  const chipStyle = useAnimatedStyle(() => ({
+    opacity: reveal.value,
+    transform: [{ scale: 0.7 + reveal.value * 0.3 }],
+  }));
+
+  return (
+    <Animated.View
+      pointerEvents={revealed ? 'auto' : 'none'}
+      style={[styles.chipSlot, styles[slot], chipStyle]}>
+      <Pressable
+        onPress={() => {
+          onNavigate();
+          router.push(chip.href);
+        }}
+        style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}>
+        <Ionicons name={chip.icon} size={14} color={Colors.accent} />
+        <ThemedText type="small">{chip.label}</ThemedText>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -143,5 +206,35 @@ const styles = StyleSheet.create({
   mascotImage: {
     width: '100%',
     height: '100%',
+  },
+  chipSlot: {
+    position: 'absolute',
+  },
+  top: {
+    top: '2%',
+    left: '50%',
+    transform: [{ translateX: -60 }],
+  },
+  bottomLeft: {
+    bottom: '6%',
+    left: 0,
+  },
+  bottomRight: {
+    bottom: '6%',
+    right: 0,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    backgroundColor: Colors.backgroundElement,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.pill,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+  },
+  chipPressed: {
+    opacity: 0.75,
   },
 });

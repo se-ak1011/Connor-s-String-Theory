@@ -45,9 +45,8 @@ export default function CommunityScreen() {
 
   return (
     <Screen>
-      <BackLink label="Home" fallbackHref="/" />
-
       <View style={styles.header}>
+        <BackLink label="Home" fallbackHref="/" />
         <ThemedText type="title">{community.title}</ThemedText>
         <ThemedText themeColor="textSecondary">{community.intro}</ThemedText>
       </View>
