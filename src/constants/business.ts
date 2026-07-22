@@ -69,6 +69,15 @@ export type Service = {
   highlight?: boolean;
 };
 
+// `price` above is a display string ("£30") for copy flexibility — this
+// pulls the plain number out of it for anywhere that needs to do actual
+// math with it (booking records, the Tax Pot).
+export function parseServicePrice(price: string): number | null {
+  const digits = price.replace(/[^0-9.]/g, '');
+  const parsed = Number.parseFloat(digits);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export const services: Service[] = [
   {
     id: 'taster',

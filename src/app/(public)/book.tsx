@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TextField } from '@/components/ui/text-field';
-import { services } from '@/constants/business';
+import { parseServicePrice, services } from '@/constants/business';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { fetchAvailability, type DayAvailability } from '@/lib/availability';
 import { BookingUnavailableError, submitBooking } from '@/lib/bookings';
@@ -76,6 +76,7 @@ export default function BookScreen() {
         dogName,
         dogBreed,
         notes,
+        price: parseServicePrice(selectedService.price) ?? undefined,
       });
       setStatus('confirmed');
       if (checkoutUrl) {

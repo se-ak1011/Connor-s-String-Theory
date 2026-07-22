@@ -87,6 +87,11 @@ export type IncomeEntry = {
   kind: 'income' | 'expense';
   category: string | null;
   notes: string | null;
+  // Snapshotted at the rate in effect when the entry was created — a
+  // later rate change doesn't rewrite history. Expenses don't carry a
+  // set-aside (nothing's taxed on money going out).
+  taxRate: number | null;
+  taxSetAside: number;
 };
 
 function mapIncomeEntry(row: any): IncomeEntry {
@@ -97,6 +102,8 @@ function mapIncomeEntry(row: any): IncomeEntry {
     kind: row.kind,
     category: row.category,
     notes: row.notes,
+    taxRate: row.tax_rate == null ? null : Number(row.tax_rate),
+    taxSetAside: Number(row.tax_set_aside ?? 0),
   };
 }
 
@@ -106,19 +113,79 @@ export async function fetchIncomeEntries(): Promise<IncomeEntry[]> {
   return data.map(mapIncomeEntry);
 }
 
+/**
+ * Manual entries (bookings marked paid are logged automatically by the
+ * booking_income_trigger in migrations/0002_tax_pot.sql instead — this is
+ * only for the "Add entry" form). `taxRate` is the trainer's current rate,
+ * passed in by the caller rather than fetched again here — same
+ * snapshot-at-creation behaviour as the trigger.
+ */
 export async function addIncomeEntry(fields: {
   amount: number;
   kind: 'income' | 'expense';
   category?: string;
   notes?: string;
   entryDate?: string;
+  taxRate: number;
 }): Promise<void> {
+  const taxSetAside = fields.kind === 'income' ? Math.round(fields.amount * (fields.taxRate / 100) * 100) / 100 : 0;
+
   const { error } = await supabase.from('income_entries').insert({
     amount: fields.amount,
     kind: fields.kind,
     category: fields.category ?? null,
     notes: fields.notes ?? null,
     entry_date: fields.entryDate ?? new Date().toISOString().slice(0, 10),
+    tax_rate: fields.kind === 'income' ? fields.taxRate : null,
+    tax_set_aside: taxSetAside,
   });
   if (error) throw new Error(error.message);
+}
+
+export async function fetchTaxRate(): Promise<number> {
+  const { data } = await supabase.from('profiles').select('tax_rate').eq('role', 'trainer').limit(1).maybeSingle();
+  return data?.tax_rate == null ? 30 : Number(data.tax_rate);
+}
+
+export async function updateTaxRate(userId: string, rate: number): Promise<void> {
+  const { error } = await supabase.from('profiles').update({ tax_rate: rate }).eq('id', userId);
+  if (error) throw new Error(error.message);
+}
+
+export type TaxPotSummary = {
+  totalSetAside: number;
+  totalIncome: number;
+  totalExpenses: number;
+  yearlyProjection: number;
+  estimatedTax: number;
+  monthlySetAside: number;
+};
+
+/**
+ * Same run-rate approach as PAI's Tax Pot: total income so far in the
+ * current UK tax year (6 April – 5 April), divided by months elapsed to
+ * get a monthly rate, extrapolated to a naive straight-line yearly
+ * figure. Not a real forecast — see the disclaimer shown alongside it.
+ */
+export function calcTaxPotSummary(entries: IncomeEntry[], taxRate: number): TaxPotSummary {
+  const totalIncome = entries.filter((e) => e.kind === 'income').reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = entries.filter((e) => e.kind === 'expense').reduce((sum, e) => sum + e.amount, 0);
+  const totalSetAside = entries.reduce((sum, e) => sum + e.taxSetAside, 0);
+
+  const now = new Date();
+  const taxYearStart = new Date(now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1, 3, 6);
+  const msElapsed = now.getTime() - taxYearStart.getTime();
+  const monthsElapsed = Math.max(1, msElapsed / (1000 * 60 * 60 * 24 * 30.44));
+  const monthlyRate = totalIncome / monthsElapsed;
+  const yearlyProjection = monthlyRate * 12;
+  const estimatedTax = yearlyProjection * (taxRate / 100);
+
+  return {
+    totalSetAside,
+    totalIncome,
+    totalExpenses,
+    yearlyProjection,
+    estimatedTax,
+    monthlySetAside: estimatedTax / 12,
+  };
 }

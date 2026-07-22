@@ -9,7 +9,7 @@ import { BackLink } from '@/components/ui/back-link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TextField } from '@/components/ui/text-field';
-import { services } from '@/constants/business';
+import { parseServicePrice, services } from '@/constants/business';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { fetchAvailability, type DayAvailability } from '@/lib/availability';
@@ -72,6 +72,7 @@ export default function NewSessionScreen() {
         notes,
         userId: user.id,
         dogId: dog?.id,
+        price: parseServicePrice(selectedService.price) ?? undefined,
       });
       setStatus('confirmed');
     } catch (err) {

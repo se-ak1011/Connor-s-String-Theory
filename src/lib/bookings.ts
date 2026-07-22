@@ -17,6 +17,10 @@ export type BookingPayload = {
   // and stays anonymous, same as before.
   userId?: string;
   dogId?: string;
+  // Numeric price (see parseServicePrice in constants/business.ts) — feeds
+  // the Tax Pot's auto-log-on-paid trigger, which needs an actual number
+  // to work with, not the display string.
+  price?: number;
 };
 
 export type Booking = {
@@ -79,6 +83,7 @@ export async function submitBooking(payload: BookingPayload): Promise<{ checkout
       status: 'pending_confirmation',
       user_id: payload.userId ?? null,
       dog_id: payload.dogId ?? null,
+      price: payload.price ?? null,
     })
     .select('id')
     .single();

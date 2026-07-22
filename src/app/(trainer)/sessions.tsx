@@ -63,6 +63,7 @@ export default function TrainerSessionsScreen() {
               updating={updatingId === booking.id}
               onConfirm={() => handleUpdateStatus(booking.id, 'confirmed')}
               onCancel={() => handleUpdateStatus(booking.id, 'cancelled')}
+              onMarkPaid={() => handleUpdateStatus(booking.id, 'paid')}
             />
           ))
         )}
@@ -72,7 +73,12 @@ export default function TrainerSessionsScreen() {
         <View style={styles.section}>
           <ThemedText type="subtitle">Past</ThemedText>
           {past.map((booking) => (
-            <BookingCard key={booking.id} booking={booking} updating={false} />
+            <BookingCard
+              key={booking.id}
+              booking={booking}
+              updating={updatingId === booking.id}
+              onMarkPaid={() => handleUpdateStatus(booking.id, 'paid')}
+            />
           ))}
         </View>
       )}
@@ -85,11 +91,13 @@ function BookingCard({
   updating,
   onConfirm,
   onCancel,
+  onMarkPaid,
 }: {
   booking: TrainerBooking;
   updating: boolean;
   onConfirm?: () => void;
   onCancel?: () => void;
+  onMarkPaid?: () => void;
 }) {
   return (
     <Card style={styles.card}>
@@ -110,12 +118,20 @@ function BookingCard({
           {booking.notes}
         </ThemedText>
       )}
-      {(onConfirm || onCancel) && booking.status === 'pending_confirmation' && (
+      {booking.status === 'pending_confirmation' && (onConfirm || onCancel) && (
         <View style={styles.actions}>
           {onConfirm && <Button label="Confirm" onPress={onConfirm} loading={updating} style={styles.actionButton} />}
           {onCancel && (
             <Button label="Cancel" variant="secondary" onPress={onCancel} loading={updating} style={styles.actionButton} />
           )}
+        </View>
+      )}
+      {booking.status === 'confirmed' && onMarkPaid && (
+        <View style={styles.actions}>
+          {/* Marking paid is what fires the auto-log-to-Tax-Pot trigger
+              (migrations/0002_tax_pot.sql) — this is the "money comes in"
+              moment, not Confirm. */}
+          <Button label="Mark as paid" onPress={onMarkPaid} loading={updating} style={styles.actionButton} />
         </View>
       )}
     </Card>
