@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeOut } from 'react-native-reanimated';
 
@@ -11,12 +11,29 @@ SplashScreen.preventAutoHideAsync();
 
 export function SplashOverlay({ ready }: { ready: boolean }) {
   const [visible, setVisible] = useState(true);
+  const hideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready) {
+      // `ready` can legitimately flip back to false after a brief true
+      // pulse (e.g. session resolves a render before the profile/role
+      // does) — cancel any pending hide and re-cover the screen so we
+      // never reveal a portal picked before auth state had fully settled.
+      if (hideTimeout.current) {
+        clearTimeout(hideTimeout.current);
+        hideTimeout.current = null;
+      }
+      setVisible(true);
+      return;
+    }
+
     SplashScreen.hideAsync().finally(() => {
-      setTimeout(() => setVisible(false), 250);
+      hideTimeout.current = setTimeout(() => setVisible(false), 250);
     });
+
+    return () => {
+      if (hideTimeout.current) clearTimeout(hideTimeout.current);
+    };
   }, [ready]);
 
   if (!visible) return null;

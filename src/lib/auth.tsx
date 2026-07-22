@@ -16,10 +16,11 @@ type AuthContextValue = {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
-  // True whenever a session exists but its profile (and therefore role)
-  // hasn't resolved yet — the root layout waits on this before deciding
-  // between the client portal and the trainer portal, so a trainer never
-  // flashes the client UI for a frame first.
+  // True whenever a session exists but `profile` doesn't yet reflect it —
+  // the root layout waits on this before deciding between the client
+  // portal and the trainer portal. Derived (see below), not a separately
+  // set flag, so there's no render frame where session is set but this
+  // hasn't caught up yet.
   profileLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
@@ -47,7 +48,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
+  // The user id `profile` is actually valid for. Comparing this to the
+  // current session's user id (below) is what makes profileLoading
+  // correct on the very first render after a session appears, instead of
+  // waiting a render for a separate effect to flip a flag.
+  const [profileFetchedFor, setProfileFetchedFor] = useState<string | null>(null);
+  const profileLoading = !!session?.user && profileFetchedFor !== session.user.id;
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -79,18 +85,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!session?.user) {
       setProfile(null);
-      setProfileLoading(false);
+      setProfileFetchedFor(null);
       return;
     }
 
     let cancelled = false;
-    setProfileLoading(true);
+    const userId = session.user.id;
 
     (async () => {
-      const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
       if (cancelled) return;
       setProfile(data ? mapProfile(data) : null);
-      setProfileLoading(false);
+      setProfileFetchedFor(userId);
     })();
 
     return () => {
