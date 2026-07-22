@@ -29,6 +29,13 @@ export const supabase = createClient(
   supabaseUrl ?? 'https://placeholder.supabase.co',
   supabaseAnonKey ?? 'placeholder-anon-key',
   {
+    db: {
+      // Everything for this app lives in its own schema — see
+      // supabase/schema.sql — so nothing collides with Tenant Passport's
+      // tables in `public`. Every bare `.from(...)`/`.rpc(...)` call
+      // below defaults to this schema; no call site needs to say so.
+      schema: 'connorst',
+    },
     auth: {
       storage: Platform.OS === 'web' ? undefined : ExpoSecureStoreAdapter,
       autoRefreshToken: true,

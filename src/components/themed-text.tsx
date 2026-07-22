@@ -44,18 +44,18 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 const styles = StyleSheet.create({
   small: {
     fontFamily: Fonts.sans,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 24,
   },
   smallBold: {
     fontFamily: Fonts.sansMedium,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 24,
   },
   default: {
     fontFamily: Fonts.sans,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 19,
+    lineHeight: 28,
   },
   display: {
     fontFamily: Fonts.displayBold,
@@ -74,13 +74,13 @@ const styles = StyleSheet.create({
   },
   link: {
     fontFamily: Fonts.sans,
-    lineHeight: 30,
-    fontSize: 14,
+    lineHeight: 26,
+    fontSize: 16,
   },
   linkPrimary: {
     fontFamily: Fonts.sansMedium,
-    lineHeight: 30,
-    fontSize: 14,
+    lineHeight: 26,
+    fontSize: 16,
     color: Colors.complement,
   },
   code: {

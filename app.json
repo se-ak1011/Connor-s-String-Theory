@@ -36,6 +36,12 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Connor's String Theory uses your photos to share pictures of your dog's training with Connor."
+        }
       ]
     ],
     "experiments": {

@@ -1,11 +1,16 @@
 import type { PropsWithChildren } from 'react';
-import { Platform, ScrollView, StyleSheet } from 'react-native';
+import { Platform, RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
-export function Screen({ children }: PropsWithChildren) {
+type ScreenProps = PropsWithChildren<{
+  refreshing?: boolean;
+  onRefresh?: () => void;
+}>;
+
+export function Screen({ children, refreshing, onRefresh }: ScreenProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -13,7 +18,12 @@ export function Screen({ children }: PropsWithChildren) {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         contentInset={{ bottom: insets.bottom + BottomTabInset }}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />
+          ) : undefined
+        }>
         <ThemedView
           style={[
             styles.inner,

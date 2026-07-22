@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { Href } from 'expo-router';
 import {
   Tabs,
   TabList,
@@ -14,22 +13,16 @@ import { BrandMark } from './brand-mark';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
+import type { TabDef } from '@/components/tab-def';
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
-const TABS: { name: string; href: Href; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { name: 'home', href: '/', label: 'Home', icon: 'home' },
-  { name: 'meet-pickles', href: '/meet-pickles', label: 'Meet Pickles', icon: 'paw' },
-  { name: 'book', href: '/book', label: 'Book', icon: 'calendar' },
-  { name: 'contact', href: '/contact', label: 'Contact', icon: 'chatbubble-ellipses' },
-];
-
-export default function AppTabs() {
+export default function AppTabs({ tabs }: { tabs: TabDef[] }) {
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
         <CustomTabList>
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <TabTrigger key={tab.name} name={tab.name} href={tab.href} asChild>
               <TabButton icon={tab.icon}>{tab.label}</TabButton>
             </TabTrigger>

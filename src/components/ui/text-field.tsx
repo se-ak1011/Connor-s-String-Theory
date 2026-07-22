@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     color: Colors.text,
     fontFamily: Fonts.sans,
-    fontSize: 16,
+    fontSize: 19,
   },
   // Focus state — the one deliberate purple accent on form fields.
   inputFocused: {

@@ -13,7 +13,37 @@ export type BookingPayload = {
   dogName: string;
   dogBreed: string;
   notes: string;
+  // Only set for portal bookings — the public book.tsx flow omits these
+  // and stays anonymous, same as before.
+  userId?: string;
+  dogId?: string;
 };
+
+export type Booking = {
+  id: string;
+  serviceId: string;
+  serviceName: string;
+  date: string;
+  time: string;
+  notes: string;
+  status: 'pending_confirmation' | 'confirmed' | 'paid' | 'cancelled';
+  sessionSummary: string | null;
+  createdAt: string;
+};
+
+function mapBooking(row: any): Booking {
+  return {
+    id: row.id,
+    serviceId: row.service_id,
+    serviceName: row.service_name,
+    date: row.date,
+    time: row.time,
+    notes: row.notes,
+    status: row.status,
+    sessionSummary: row.session_summary,
+    createdAt: row.created_at,
+  };
+}
 
 export type EnquiryPayload = {
   name: string;
@@ -47,6 +77,8 @@ export async function submitBooking(payload: BookingPayload): Promise<{ checkout
       dog_breed: payload.dogBreed,
       notes: payload.notes,
       status: 'pending_confirmation',
+      user_id: payload.userId ?? null,
+      dog_id: payload.dogId ?? null,
     })
     .select('id')
     .single();
@@ -86,4 +118,31 @@ export async function submitEnquiry(payload: EnquiryPayload): Promise<void> {
   if (error) {
     throw new BookingUnavailableError(error.message);
   }
+}
+
+export async function fetchMyBookings(userId: string): Promise<Booking[]> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('user_id', userId)
+    .order('date', { ascending: true });
+
+  if (error || !data) return [];
+  return data.map(mapBooking);
+}
+
+export async function cancelBooking(id: string): Promise<void> {
+  const { error } = await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id);
+  if (error) throw new BookingUnavailableError(error.message);
+}
+
+/**
+ * Only works while the booking is still pending_confirmation — the RLS
+ * policy on `bookings` rejects this update once Connor's confirmed a
+ * session, by design. The Sessions screen routes that case to a Coach
+ * message instead of calling this.
+ */
+export async function rescheduleBooking(id: string, date: string, time: string): Promise<void> {
+  const { error } = await supabase.from('bookings').update({ date, time }).eq('id', id);
+  if (error) throw new BookingUnavailableError(error.message);
 }
