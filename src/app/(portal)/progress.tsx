@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
+import { BackLink } from '@/components/ui/back-link';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Radius, Spacing } from '@/constants/theme';
@@ -51,6 +52,8 @@ export default function ProgressScreen() {
 
   return (
     <Screen refreshing={loading} onRefresh={load}>
+      <BackLink label="Home" fallbackHref="/" />
+
       <View style={styles.header}>
         <ThemedText type="title">Progress</ThemedText>
         <ThemedText themeColor="textSecondary">A record of how far you've come together — not a scoreboard.</ThemedText>

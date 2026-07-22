@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
+import { BackLink } from '@/components/ui/back-link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Spacing } from '@/constants/theme';
@@ -46,6 +47,7 @@ export default function SessionDetailScreen() {
   if (!booking) {
     return (
       <Screen>
+        <BackLink fallbackHref="/sessions" />
         <ThemedText themeColor="textMuted">Loading…</ThemedText>
       </Screen>
     );
@@ -56,6 +58,8 @@ export default function SessionDetailScreen() {
 
   return (
     <Screen>
+      <BackLink fallbackHref="/sessions" />
+
       <View style={styles.header}>
         <ThemedText type="title">{booking.serviceName}</ThemedText>
         <ThemedText themeColor="textSecondary">

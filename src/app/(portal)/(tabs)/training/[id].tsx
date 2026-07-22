@@ -1,10 +1,10 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
+import { BackLink } from '@/components/ui/back-link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ComingSoonBadge } from '@/components/ui/coming-soon-badge';
@@ -40,6 +40,7 @@ export default function HomeworkDetailScreen() {
   if (!item) {
     return (
       <Screen>
+        <BackLink fallbackHref="/training" />
         <ThemedText themeColor="textMuted">Loading…</ThemedText>
       </Screen>
     );
@@ -47,6 +48,8 @@ export default function HomeworkDetailScreen() {
 
   return (
     <Screen>
+      <BackLink fallbackHref="/training" />
+
       <View style={styles.header}>
         <ThemedText type="title">{item.title}</ThemedText>
         {item.exercise?.category && (

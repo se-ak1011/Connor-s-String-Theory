@@ -5,6 +5,7 @@ import { Calendar, type DateData } from 'react-native-calendars';
 
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
+import { BackLink } from '@/components/ui/back-link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { TextField } from '@/components/ui/text-field';
@@ -94,6 +95,8 @@ export default function NewSessionScreen() {
 
   return (
     <Screen>
+      <BackLink fallbackHref="/sessions" />
+
       <View style={styles.header}>
         <ThemedText type="title">Book a session</ThemedText>
         <ThemedText themeColor="textSecondary">

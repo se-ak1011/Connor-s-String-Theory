@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
+import { BackLink } from '@/components/ui/back-link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PointsBadge } from '@/components/ui/points-badge';
@@ -44,6 +45,8 @@ export default function CommunityScreen() {
 
   return (
     <Screen>
+      <BackLink label="Home" fallbackHref="/" />
+
       <View style={styles.header}>
         <ThemedText type="title">{community.title}</ThemedText>
         <ThemedText themeColor="textSecondary">{community.intro}</ThemedText>

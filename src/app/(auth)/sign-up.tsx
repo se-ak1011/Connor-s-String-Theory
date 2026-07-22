@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -111,6 +111,9 @@ export default function SignUpScreen() {
             <ThemedText type="linkPrimary">Sign in</ThemedText>
           </Link>
         </ThemedText>
+        <ThemedText type="link" themeColor="textMuted" onPress={() => router.push('/')} style={styles.centerText}>
+          Back to the site
+        </ThemedText>
       </View>
     </Screen>
   );
@@ -129,6 +132,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
+    gap: Spacing.three,
   },
   confirmCard: {
     alignItems: 'center',
