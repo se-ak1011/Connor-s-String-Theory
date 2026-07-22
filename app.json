@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "backgroundColor": "#B5ADA2",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "backgroundColor": "#B5ADA2",
       "bundleIdentifier": "com.connorst.app"
     },

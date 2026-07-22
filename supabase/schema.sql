@@ -74,7 +74,14 @@ begin
 end;
 $$;
 
-create trigger on_auth_user_created
+-- Named connorst_on_auth_user_created, not the more obvious
+-- on_auth_user_created — auth.users is one physical table shared with
+-- Tenant Passport, and trigger names aren't namespaced per schema, only
+-- per table. Tenant Passport already has its own trigger on this table
+-- (very likely under the generic name from Supabase's own docs example,
+-- which is exactly what collided here) — every trigger on auth.users needs
+-- a name unique across BOTH apps, not just within connorst.
+create trigger connorst_on_auth_user_created
   after insert on auth.users
   for each row execute function connorst.handle_new_user();
 
