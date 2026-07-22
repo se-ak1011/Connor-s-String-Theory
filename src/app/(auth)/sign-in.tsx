@@ -19,6 +19,20 @@ export default function SignInScreen() {
 
   const canSubmit = email.trim() && password.trim();
 
+  function handleBackToSite() {
+    // A plain href push/replace to "/" is ambiguous here — (public),
+    // (portal)/(tabs), and (trainer) all declare an index route at "/",
+    // and pushing that href from inside (auth) silently no-ops instead of
+    // navigating. Going back through existing history (how this screen was
+    // reached) works reliably; replace() is only a fallback for the rare
+    // case of landing here with no history (e.g. a deep link).
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  }
+
   async function handleSubmit() {
     setSubmitting(true);
     setError(null);
@@ -80,7 +94,7 @@ export default function SignInScreen() {
         <ThemedText
           type="link"
           themeColor="textMuted"
-          onPress={() => router.push('/')}
+          onPress={handleBackToSite}
           style={styles.centerText}>
           Back to the site
         </ThemedText>

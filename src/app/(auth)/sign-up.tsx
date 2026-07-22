@@ -23,6 +23,19 @@ export default function SignUpScreen() {
 
   const canSubmit = fullName.trim() && email.trim() && password.trim().length >= 6;
 
+  function handleBackToSite() {
+    // See the matching comment in sign-in.tsx — a plain href push/replace
+    // to "/" is ambiguous across (public), (portal)/(tabs) and (trainer),
+    // and silently no-ops from inside (auth). Going back through existing
+    // history works reliably; replace() is only a fallback for landing
+    // here with no history.
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  }
+
   async function handleSubmit() {
     setSubmitting(true);
     setError(null);
@@ -111,7 +124,7 @@ export default function SignUpScreen() {
             <ThemedText type="linkPrimary">Sign in</ThemedText>
           </Link>
         </ThemedText>
-        <ThemedText type="link" themeColor="textMuted" onPress={() => router.push('/')} style={styles.centerText}>
+        <ThemedText type="link" themeColor="textMuted" onPress={handleBackToSite} style={styles.centerText}>
           Back to the site
         </ThemedText>
       </View>

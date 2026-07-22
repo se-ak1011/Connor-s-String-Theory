@@ -19,6 +19,8 @@ export function Screen({ children, refreshing, onRefresh }: ScreenProps) {
         contentContainerStyle={styles.scrollContent}
         contentInset={{ bottom: insets.bottom + BottomTabInset }}
         showsVerticalScrollIndicator={false}
+        bounces={false}
+        overScrollMode="never"
         refreshControl={
           onRefresh ? (
             <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={Colors.accent} />

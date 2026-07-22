@@ -113,13 +113,16 @@ export async function updateDog(
   if (error) throw new Error(error.message);
 }
 
+export type PickedPhoto = {
+  uri: string;
+  mimeType?: string;
+};
+
 /**
- * Picks a photo from the library and uploads it as this dog's profile
- * photo, under the same private bucket/path convention as lib/media.ts
- * (first path segment = owner's user id, so the existing Storage RLS
- * policies already cover this without any new policy).
+ * Just the picker step, no upload — lets the Add Dog form show a local
+ * preview before the dog (and therefore an id to upload against) exists.
  */
-export async function pickAndUploadDogPhoto(userId: string, dogId: string): Promise<string | null> {
+export async function pickDogPhoto(): Promise<PickedPhoto | null> {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) return null;
 
@@ -127,19 +130,36 @@ export async function pickAndUploadDogPhoto(userId: string, dogId: string): Prom
   if (result.canceled || !result.assets[0]) return null;
 
   const asset = result.assets[0];
-  const ext = asset.uri.split('.').pop()?.toLowerCase() ?? 'jpg';
+  return { uri: asset.uri, mimeType: asset.mimeType };
+}
+
+/**
+ * Uploads an already-picked photo as this dog's profile photo, under the
+ * same private bucket/path convention as lib/media.ts (first path segment
+ * = owner's user id, so the existing Storage RLS policies already cover
+ * this without any new policy).
+ */
+export async function uploadDogPhoto(userId: string, dogId: string, photo: PickedPhoto): Promise<string | null> {
+  const ext = photo.uri.split('.').pop()?.toLowerCase() ?? 'jpg';
   const path = `${userId}/dog-${dogId}-${Date.now()}.${ext}`;
 
-  const response = await fetch(asset.uri);
+  const response = await fetch(photo.uri);
   const arrayBuffer = await response.arrayBuffer();
 
   const { error: uploadError } = await supabase.storage
     .from(MEDIA_BUCKET)
-    .upload(path, arrayBuffer, { contentType: asset.mimeType ?? 'image/jpeg' });
+    .upload(path, arrayBuffer, { contentType: photo.mimeType ?? 'image/jpeg' });
   if (uploadError) throw new Error(uploadError.message);
 
   await updateDog(dogId, { photoPath: path });
   return resolvePhotoUrl(path);
+}
+
+/** Picks then immediately uploads — the common case once a dog already exists. */
+export async function pickAndUploadDogPhoto(userId: string, dogId: string): Promise<string | null> {
+  const photo = await pickDogPhoto();
+  if (!photo) return null;
+  return uploadDogPhoto(userId, dogId, photo);
 }
 
 export async function updateProfile(userId: string, fullName: string): Promise<void> {

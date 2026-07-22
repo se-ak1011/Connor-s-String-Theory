@@ -16,10 +16,13 @@ import {
   createDog,
   fetchMyDog,
   pickAndUploadDogPhoto,
+  pickDogPhoto,
   updateDog,
   updateNotificationPrefs,
+  uploadDogPhoto,
   type Dog,
   type NotificationPrefs,
+  type PickedPhoto,
 } from '@/lib/profile';
 
 const DEFAULT_PREFS: NotificationPrefs = {
@@ -41,6 +44,7 @@ export default function ProfileScreen() {
   const [balance, setBalance] = useState<PointBalance | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [newDogPhoto, setNewDogPhoto] = useState<PickedPhoto | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -65,13 +69,29 @@ export default function ProfileScreen() {
     setError(null);
     try {
       const created = await createDog(user.id, { name: newDogName.trim(), breed: newDogBreed.trim() || undefined });
-      setDog(created);
+      if (newDogPhoto) {
+        const photoUrl = await uploadDogPhoto(user.id, created.id, newDogPhoto);
+        setDog({ ...created, photoUrl });
+      } else {
+        setDog(created);
+      }
       setNewDogName('');
       setNewDogBreed('');
+      setNewDogPhoto(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not add your dog — try again.');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handlePickNewDogPhoto() {
+    setError(null);
+    try {
+      const photo = await pickDogPhoto();
+      if (photo) setNewDogPhoto(photo);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not open your photos — try again.');
     }
   }
 
@@ -171,6 +191,19 @@ export default function ProfileScreen() {
           </>
         ) : (
           <>
+            <View style={styles.photoRow}>
+              {newDogPhoto ? (
+                <Image source={{ uri: newDogPhoto.uri }} style={styles.photo} contentFit="cover" />
+              ) : (
+                <View style={styles.photoPlaceholder} />
+              )}
+              <Button
+                label={newDogPhoto ? 'Change photo' : 'Add photo'}
+                variant="secondary"
+                onPress={handlePickNewDogPhoto}
+                style={styles.photoButton}
+              />
+            </View>
             <TextField label="Dog's name" value={newDogName} onChangeText={setNewDogName} autoCapitalize="words" />
             <TextField label="Breed" value={newDogBreed} onChangeText={setNewDogBreed} autoCapitalize="words" />
             <Button label="Add dog" onPress={handleAddDog} disabled={!newDogName.trim()} loading={saving} />
