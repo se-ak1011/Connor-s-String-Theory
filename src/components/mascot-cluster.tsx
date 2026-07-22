@@ -1,35 +1,33 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image, type ImageProps } from 'expo-image';
-import * as Haptics from 'expo-haptics';
 import { router, type Href } from 'expo-router';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  interpolate,
+  type SharedValue,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withDelay,
   withRepeat,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { useEffect, useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 
 /**
- * The Home hero: just Pickles, tappable — a haptic bump, ringed by a slow
- * sonar pulse in Colors.complement (the one deliberate purple touch,
- * reserved for haptic/interactive moments). He doesn't move on tap; the
- * ring + haptic alone signal "this is interactive."
+ * The Home hero: just Pickles, tappable. No haptic — the only signal that
+ * he's interactive is a soft pulse ring that loops until the first tap,
+ * then stops for good. Pressing him doesn't move him; he just idly
+ * breathes. When `chips` are provided, a tap fans up to three destination
+ * chips out around him in a ring (tapping again, a chip, or outside hides
+ * them). Ported from the companion pattern used in Hassle/Alchono.
  *
  * `mascotSource` falls back to a paw-icon placeholder when omitted —
  * useful for previewing layout changes without the real asset.
- *
- * `chips`, when provided (trainer Home only — the public/client Home
- * passes none), turns a tap into a toggle: the same haptic fires, and up
- * to three destination chips fade/scale in around him instead of nothing
- * happening. Tapping again (or a chip itself) hides them.
  */
 
 export type ClusterChip = {
@@ -43,40 +41,77 @@ type MascotClusterProps = {
   chips?: ClusterChip[];
 };
 
-const CHIP_SLOTS = ['top', 'bottomLeft', 'bottomRight'] as const;
+// Evenly spaced around an ellipse, starting at 12 o'clock and going
+// clockwise. Capped at 3 chips here, so this always lands on the
+// generic branch (no hand-tuned per-count layouts needed).
+function slotFor(index: number, count: number) {
+  const angle = -Math.PI / 2 + (index * 2 * Math.PI) / Math.max(count, 1);
+  return { x: Math.cos(angle), y: Math.sin(angle) };
+}
+
+const RADIUS_X = 100;
+const RADIUS_Y = 125;
 
 export function MascotCluster({ mascotSource, chips }: MascotClusterProps) {
   const reducedMotion = useReducedMotion();
   const breathe = useSharedValue(0);
-  const [revealed, setRevealed] = useState(false);
+  const progress = useSharedValue(0);
+  const tapPulse = useSharedValue(0);
+  const [open, setOpen] = useState(false);
+  const [hasOpened, setHasOpened] = useState(false);
 
   useEffect(() => {
     if (reducedMotion) return;
-    breathe.value = withRepeat(withTiming(1, { duration: 2600 }), -1, true);
+    breathe.value = withRepeat(withTiming(1, { duration: 4200, easing: Easing.inOut(Easing.ease) }), -1, true);
   }, [breathe, reducedMotion]);
 
+  useEffect(() => {
+    if (reducedMotion || hasOpened || open) {
+      tapPulse.value = 0;
+      return;
+    }
+    tapPulse.value = withRepeat(withTiming(1, { duration: 2200, easing: Easing.out(Easing.ease) }), -1, false);
+  }, [hasOpened, open, reducedMotion, tapPulse]);
+
+  useEffect(() => {
+    progress.value = withSpring(open ? 1 : 0, { damping: 16, stiffness: 140 });
+  }, [open, progress]);
+
   const characterStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 + breathe.value * 0.035 }],
+    transform: [{ translateY: -breathe.value * 3 }, { scale: 1 + breathe.value * 0.008 }],
+  }));
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(tapPulse.value, [0, 0.55, 1], [0.16, 0.32, 0]),
+    transform: [{ scale: interpolate(tapPulse.value, [0, 1], [0.88, 1.28]) }],
   }));
 
   function handlePress() {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
+    setHasOpened(true);
     if (chips && chips.length > 0) {
-      setRevealed((prev) => !prev);
+      setOpen((prev) => !prev);
     }
   }
 
+  const showTapPulse = !reducedMotion && !hasOpened && !open;
+
   return (
     <View style={styles.cluster}>
+      {open && <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)} />}
+
       <View style={styles.characterWrap} pointerEvents="box-none">
-        {!reducedMotion && (
-          <>
-            <PulseRing delay={0} />
-            <PulseRing delay={1400} />
-          </>
-        )}
+        {showTapPulse && <Animated.View pointerEvents="none" style={[styles.tapPulse, pulseStyle]} />}
+
+        {chips?.slice(0, 3).map((chip, index, arr) => (
+          <Chip
+            key={chip.label}
+            chip={chip}
+            slot={slotFor(index, arr.length)}
+            progress={progress}
+            open={open}
+            onNavigate={() => setOpen(false)}
+          />
+        ))}
 
         <Pressable onPress={handlePress} hitSlop={16} style={styles.characterInner}>
           <Animated.View style={[styles.characterFill, characterStyle]}>
@@ -91,10 +126,6 @@ export function MascotCluster({ mascotSource, chips }: MascotClusterProps) {
           </Animated.View>
         </Pressable>
       </View>
-
-      {chips?.slice(0, 3).map((chip, index) => (
-        <Chip key={chip.label} chip={chip} slot={CHIP_SLOTS[index]} revealed={revealed} onNavigate={() => setRevealed(false)} />
-      ))}
     </View>
   );
 }
@@ -102,29 +133,27 @@ export function MascotCluster({ mascotSource, chips }: MascotClusterProps) {
 function Chip({
   chip,
   slot,
-  revealed,
+  progress,
+  open,
   onNavigate,
 }: {
   chip: ClusterChip;
-  slot: (typeof CHIP_SLOTS)[number];
-  revealed: boolean;
+  slot: { x: number; y: number };
+  progress: SharedValue<number>;
+  open: boolean;
   onNavigate: () => void;
 }) {
-  const reveal = useSharedValue(0);
-
-  useEffect(() => {
-    reveal.value = withTiming(revealed ? 1 : 0, { duration: 220, easing: Easing.out(Easing.quad) });
-  }, [revealed, reveal]);
-
   const chipStyle = useAnimatedStyle(() => ({
-    opacity: reveal.value,
-    transform: [{ scale: 0.7 + reveal.value * 0.3 }],
+    opacity: interpolate(progress.value, [0, 0.55, 1], [0, 0.2, 1]),
+    transform: [
+      { translateX: progress.value * slot.x * RADIUS_X },
+      { translateY: progress.value * slot.y * RADIUS_Y },
+      { scale: interpolate(progress.value, [0, 1], [0.72, 1]) },
+    ],
   }));
 
   return (
-    <Animated.View
-      pointerEvents={revealed ? 'auto' : 'none'}
-      style={[styles.chipSlot, styles[slot], chipStyle]}>
+    <Animated.View pointerEvents={open ? 'auto' : 'none'} style={[styles.chipSlot, chipStyle]}>
       <Pressable
         onPress={() => {
           onNavigate();
@@ -136,24 +165,6 @@ function Chip({
       </Pressable>
     </Animated.View>
   );
-}
-
-function PulseRing({ delay }: { delay: number }) {
-  const t = useSharedValue(0);
-
-  useEffect(() => {
-    t.value = withDelay(
-      delay,
-      withRepeat(withTiming(1, { duration: 2800, easing: Easing.out(Easing.ease) }), -1, false),
-    );
-  }, [delay, t]);
-
-  const ringStyle = useAnimatedStyle(() => ({
-    opacity: (1 - t.value) * 0.5,
-    transform: [{ scale: 1 + t.value * 0.55 }],
-  }));
-
-  return <Animated.View pointerEvents="none" style={[styles.ring, ringStyle]} />;
 }
 
 const styles = StyleSheet.create({
@@ -169,17 +180,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ring: {
+  tapPulse: {
     position: 'absolute',
-    width: '72%',
+    width: '76%',
     aspectRatio: 1,
     borderRadius: Radius.pill,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: Colors.complement,
+    backgroundColor: Colors.accentSoft,
   },
   characterInner: {
     width: '78%',
     aspectRatio: 1,
+    zIndex: 2,
   },
   characterFill: {
     width: '100%',
@@ -209,19 +222,7 @@ const styles = StyleSheet.create({
   },
   chipSlot: {
     position: 'absolute',
-  },
-  top: {
-    top: '2%',
-    left: '50%',
-    transform: [{ translateX: -60 }],
-  },
-  bottomLeft: {
-    bottom: '6%',
-    left: 0,
-  },
-  bottomRight: {
-    bottom: '6%',
-    right: 0,
+    zIndex: 3,
   },
   chip: {
     flexDirection: 'row',
