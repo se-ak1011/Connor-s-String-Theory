@@ -4,16 +4,17 @@
 -- policy or trigger before recreating it). Consolidates schema.sql +
 -- migrations/0001_trainer_access.sql + migrations/0002_tax_pot.sql, plus
 -- the pieces that were missing entirely: ensure_profile() self-repair,
--- the trainer's SELECT policy on messages, and the storage bucket itself.
+-- the trainer's SELECT policy on messages, the storage bucket itself, and
+-- (this revision) connorst.is_trainer() to fix an infinite-recursion bug
+-- in every "trainer can read everything" policy inherited from the
+-- original migration — see the comment above that function for why.
 --
 -- REQUIRED MANUAL STEP, BEFORE running this script does anything useful:
 --   Supabase Dashboard → Project Settings → API → Exposed schemas → add
 --   `connorst` (and save). Without this, every request the app makes to
 --   any connorst table/function 404s or errors "Invalid schema
 --   connorst" no matter how correct everything below is — PostgREST
---   simply won't route to a schema it hasn't been told to expose. This is
---   almost certainly the actual root cause of everything reported broken
---   this round.
+--   simply won't route to a schema it hasn't been told to expose.
 --
 -- Run this whole file in the Supabase SQL editor. It targets the same
 -- project as Tenant Passport but everything lives in its own `connorst`
@@ -126,6 +127,38 @@ $$;
 
 grant execute on function connorst.ensure_profile() to authenticated;
 
+-- Every "trainers can read/write everything" policy below needs to check
+-- "is the current user a trainer?", which means reading profiles.role.
+-- Doing that with an inline `exists (select 1 from connorst.profiles
+-- where id = auth.uid() and role = 'trainer')` directly inside a POLICY
+-- ON connorst.profiles causes Postgres to recurse: evaluating that
+-- policy requires evaluating profiles' own SELECT policies again,
+-- including itself — "infinite recursion detected in policy for relation
+-- profiles". And because every OTHER trainer-check policy (on dogs,
+-- bookings, messages, media, ...) also queries profiles, touching ANY of
+-- those tables under RLS pulls in the same broken policy and recurses
+-- too — this is what broke session booking and dog creation, not just
+-- the profiles table directly.
+--
+-- Fix: do the role check inside a SECURITY DEFINER function instead. It
+-- runs as the function owner (which has bypassrls in Supabase), so its
+-- internal query against profiles never re-triggers profiles' own RLS —
+-- breaking the recursion cycle entirely. This is the standard Supabase-
+-- recommended pattern for exactly this situation.
+create or replace function connorst.is_trainer()
+returns boolean
+language sql
+security definer
+set search_path = connorst, public
+stable
+as $$
+  select exists (
+    select 1 from connorst.profiles where id = auth.uid() and role = 'trainer'
+  );
+$$;
+
+grant execute on function connorst.is_trainer() to authenticated;
+
 alter table connorst.profiles enable row level security;
 
 drop policy if exists "Users can read their own profile" on connorst.profiles;
@@ -138,9 +171,7 @@ create policy "Users can update their own profile" on connorst.profiles
 
 drop policy if exists "Trainers can read every profile" on connorst.profiles;
 create policy "Trainers can read every profile" on connorst.profiles
-  for select using (
-    exists (select 1 from connorst.profiles p where p.id = auth.uid() and p.role = 'trainer')
-  );
+  for select using (connorst.is_trainer());
 
 -- ── dogs ────────────────────────────────────────────────────────────────
 create table if not exists connorst.dogs (
@@ -170,9 +201,7 @@ create policy "Users can manage their own dogs" on connorst.dogs
 
 drop policy if exists "Trainers can read every dog" on connorst.dogs;
 create policy "Trainers can read every dog" on connorst.dogs
-  for select using (
-    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-  );
+  for select using (connorst.is_trainer());
 
 -- ── bookings / availability_slots / enquiries ───────────────────────────
 create table if not exists connorst.bookings (
@@ -246,15 +275,11 @@ create policy "Users can cancel or amend their own pending bookings" on connorst
 
 drop policy if exists "Trainers can read every booking" on connorst.bookings;
 create policy "Trainers can read every booking" on connorst.bookings
-  for select using (
-    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-  );
+  for select using (connorst.is_trainer());
 
 drop policy if exists "Trainers can update any booking" on connorst.bookings;
 create policy "Trainers can update any booking" on connorst.bookings
-  for update using (
-    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-  );
+  for update using (connorst.is_trainer());
 
 -- RLS governs rows, not columns — a client's update policy is column-
 -- restricted so they can't rewrite price-bearing fields or self-approve a
@@ -309,11 +334,7 @@ create policy "Owners can update their dog's homework" on connorst.homework_assi
 
 drop policy if exists "Trainers can manage all homework" on connorst.homework_assignments;
 create policy "Trainers can manage all homework" on connorst.homework_assignments
-  for all using (
-    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-  ) with check (
-    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-  );
+  for all using (connorst.is_trainer()) with check (connorst.is_trainer());
 
 revoke update on connorst.homework_assignments from authenticated;
 grant update (status, completed_at) on connorst.homework_assignments to authenticated;
@@ -341,18 +362,13 @@ create policy "Users can read their own thread" on connorst.messages
 -- policy, so a trainer could never read a thread that wasn't their own.
 drop policy if exists "Trainers can read every thread" on connorst.messages;
 create policy "Trainers can read every thread" on connorst.messages
-  for select using (
-    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-  );
+  for select using (connorst.is_trainer());
 
 drop policy if exists "Client sends in own thread, trainer sends in any thread" on connorst.messages;
 create policy "Client sends in own thread, trainer sends in any thread" on connorst.messages
   for insert with check (
     sender_id = auth.uid()
-    and (
-      user_id = auth.uid()
-      or exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-    )
+    and (user_id = auth.uid() or connorst.is_trainer())
   );
 
 -- ── media (photo/video/voice attachments) ───────────────────────────────
@@ -376,9 +392,7 @@ create policy "Users can manage their own media" on connorst.media
 
 drop policy if exists "Trainers can read every client's media" on connorst.media;
 create policy "Trainers can read every client's media" on connorst.media
-  for select using (
-    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-  );
+  for select using (connorst.is_trainer());
 
 -- ── point_transactions (Community Points ledger) ────────────────────────
 create table if not exists connorst.point_transactions (
@@ -513,11 +527,7 @@ alter table connorst.income_entries enable row level security;
 
 drop policy if exists "Trainers can manage the income log" on connorst.income_entries;
 create policy "Trainers can manage the income log" on connorst.income_entries
-  for all using (
-    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-  ) with check (
-    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
-  );
+  for all using (connorst.is_trainer()) with check (connorst.is_trainer());
 
 -- Fires once, the moment a booking's status changes to 'paid' — uses
 -- whatever tax_rate is on the trainer's profile at that moment and
@@ -573,6 +583,5 @@ create policy "Users can upload their own media objects" on storage.objects
 drop policy if exists "Trainers can read every media object" on storage.objects;
 create policy "Trainers can read every media object" on storage.objects
   for select using (
-    bucket_id = 'connorst-media'
-    and exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+    bucket_id = 'connorst-media' and connorst.is_trainer()
   );
