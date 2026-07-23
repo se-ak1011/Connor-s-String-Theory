@@ -8,6 +8,8 @@ import { ThemedText } from '@/components/themed-text';
 import { BackLink } from '@/components/ui/back-link';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { VideoTile } from '@/components/ui/video-tile';
+import { VoiceNoteRow } from '@/components/ui/voice-note-row';
 import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { fetchMyBookings, type Booking } from '@/lib/bookings';
@@ -20,6 +22,8 @@ export default function ProgressScreen() {
   const [pastSessions, setPastSessions] = useState<Booking[]>([]);
   const [milestones, setMilestones] = useState<HomeworkAssignment[]>([]);
   const [photos, setPhotos] = useState<MediaItem[]>([]);
+  const [videos, setVideos] = useState<MediaItem[]>([]);
+  const [voiceNotes, setVoiceNotes] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -33,12 +37,16 @@ export default function ProgressScreen() {
     );
 
     if (dog) {
-      const [homework, media] = await Promise.all([
+      const [homework, media, clips, notes] = await Promise.all([
         fetchHomework(dog.id),
         fetchMedia({ dogId: dog.id, kind: 'photo' }),
+        fetchMedia({ dogId: dog.id, kind: 'video' }),
+        fetchMedia({ dogId: dog.id, kind: 'voice' }),
       ]);
       setMilestones(homework.filter((h) => h.isMilestone));
       setPhotos(media);
+      setVideos(clips);
+      setVoiceNotes(notes);
     }
 
     setLoading(false);
@@ -86,6 +94,22 @@ export default function ProgressScreen() {
               photo.url ? <Image key={photo.id} source={{ uri: photo.url }} style={styles.photo} contentFit="cover" /> : null,
             )}
           </ScrollView>
+        </View>
+      )}
+
+      {videos.length > 0 && (
+        <View style={styles.section}>
+          <ThemedText type="subtitle">Videos</ThemedText>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
+            {videos.map((video) => (video.url ? <VideoTile key={video.id} media={video} /> : null))}
+          </ScrollView>
+        </View>
+      )}
+
+      {voiceNotes.length > 0 && (
+        <View style={styles.section}>
+          <ThemedText type="subtitle">Voice notes</ThemedText>
+          {voiceNotes.map((note) => (note.url ? <VoiceNoteRow key={note.id} media={note} /> : null))}
         </View>
       )}
 

@@ -2,10 +2,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ComingSoonBadge } from '@/components/ui/coming-soon-badge';
 import { ThemedText } from '@/components/themed-text';
+import { VoiceRecorderButton } from '@/components/ui/voice-recorder-button';
 import { Colors, Radius, Spacing } from '@/constants/theme';
-import { uploadPhoto, type MediaItem } from '@/lib/media';
+import { pickAndUploadVideo, uploadPhoto, type MediaItem } from '@/lib/media';
 
 type AttachmentPickerProps = {
   userId: string;
@@ -14,16 +14,16 @@ type AttachmentPickerProps = {
 };
 
 /**
- * Photo works end to end (expo-image-picker + Supabase Storage). Video and
- * voice are schema-ready but not wired to a capture UI yet — shown as
- * "coming soon" rather than silently missing.
+ * Photo and video pick from the library (expo-image-picker); voice
+ * records in-app (expo-audio). All three upload to the same private
+ * connorst-media bucket and record a `media` row the same way.
  */
 export function AttachmentPicker({ userId, targets, onUploaded }: AttachmentPickerProps) {
-  const [uploading, setUploading] = useState(false);
+  const [uploadingKind, setUploadingKind] = useState<'photo' | 'video' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handlePhoto() {
-    setUploading(true);
+    setUploadingKind('photo');
     setError(null);
     try {
       const media = await uploadPhoto(userId, targets);
@@ -31,33 +31,37 @@ export function AttachmentPicker({ userId, targets, onUploaded }: AttachmentPick
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not upload that photo — try again.');
     } finally {
-      setUploading(false);
+      setUploadingKind(null);
+    }
+  }
+
+  async function handleVideo() {
+    setUploadingKind('video');
+    setError(null);
+    try {
+      const media = await pickAndUploadVideo(userId, targets);
+      if (media) onUploaded?.(media);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not upload that video — try again.');
+    } finally {
+      setUploadingKind(null);
     }
   }
 
   return (
     <View style={styles.wrap}>
       <View style={styles.row}>
-        <Pressable onPress={handlePhoto} disabled={uploading} style={styles.chip}>
+        <Pressable onPress={handlePhoto} disabled={uploadingKind !== null} style={styles.chip}>
           <Ionicons name="image" size={16} color={Colors.accent} />
-          <ThemedText type="small">{uploading ? 'Uploading…' : 'Photo'}</ThemedText>
+          <ThemedText type="small">{uploadingKind === 'photo' ? 'Uploading…' : 'Photo'}</ThemedText>
         </Pressable>
 
-        <View style={styles.chip}>
-          <Ionicons name="videocam" size={16} color={Colors.textMuted} />
-          <ThemedText type="small" themeColor="textMuted">
-            Video
-          </ThemedText>
-          <ComingSoonBadge />
-        </View>
+        <Pressable onPress={handleVideo} disabled={uploadingKind !== null} style={styles.chip}>
+          <Ionicons name="videocam" size={16} color={Colors.accent} />
+          <ThemedText type="small">{uploadingKind === 'video' ? 'Uploading…' : 'Video'}</ThemedText>
+        </Pressable>
 
-        <View style={styles.chip}>
-          <Ionicons name="mic" size={16} color={Colors.textMuted} />
-          <ThemedText type="small" themeColor="textMuted">
-            Voice note
-          </ThemedText>
-          <ComingSoonBadge />
-        </View>
+        <VoiceRecorderButton userId={userId} targets={targets} onUploaded={onUploaded} onError={setError} />
       </View>
       {error && (
         <ThemedText type="small" themeColor="attention">

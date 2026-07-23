@@ -38,9 +38,16 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Connor's String Theory uses your photos to share pictures of your dog's training with Connor."
+          "photosPermission": "Connor's String Theory uses your photos to share pictures and videos of your dog's training with Connor."
         }
-      ]
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Connor's String Theory uses your microphone to record voice notes for Connor."
+        }
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,
