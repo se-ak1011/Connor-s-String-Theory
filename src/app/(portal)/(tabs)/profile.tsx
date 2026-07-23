@@ -37,15 +37,18 @@ export default function ProfileScreen() {
   const [dog, setDog] = useState<Dog | null>(null);
   const [newDogName, setNewDogName] = useState('');
   const [newDogBreed, setNewDogBreed] = useState('');
+  const [newDogBirthdate, setNewDogBirthdate] = useState('');
   const [medicalNotes, setMedicalNotes] = useState('');
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [birthdate, setBirthdate] = useState('');
   const [prefs, setPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
   const [balance, setBalance] = useState<PointBalance | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [newDogPhoto, setNewDogPhoto] = useState<PickedPhoto | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -54,6 +57,7 @@ export default function ProfileScreen() {
     setMedicalNotes(myDog?.medicalNotes ?? '');
     setEmergencyName(myDog?.emergencyContactName ?? '');
     setEmergencyPhone(myDog?.emergencyContactPhone ?? '');
+    setBirthdate(myDog?.dateOfBirth ?? '');
     setBalance(await fetchPointBalance(user.id));
   }, [user]);
 
@@ -68,7 +72,11 @@ export default function ProfileScreen() {
     setSaving(true);
     setError(null);
     try {
-      const created = await createDog(user.id, { name: newDogName.trim(), breed: newDogBreed.trim() || undefined });
+      const created = await createDog(user.id, {
+        name: newDogName.trim(),
+        breed: newDogBreed.trim() || undefined,
+        dateOfBirth: newDogBirthdate.trim() || undefined,
+      });
       if (newDogPhoto) {
         const photoUrl = await uploadDogPhoto(user.id, created.id, newDogPhoto);
         setDog({ ...created, photoUrl });
@@ -77,6 +85,7 @@ export default function ProfileScreen() {
       }
       setNewDogName('');
       setNewDogBreed('');
+      setNewDogBirthdate('');
       setNewDogPhoto(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not add your dog — try again.');
@@ -99,12 +108,16 @@ export default function ProfileScreen() {
     if (!dog) return;
     setSaving(true);
     setError(null);
+    setSaved(false);
     try {
       await updateDog(dog.id, {
         medicalNotes,
         emergencyContactName: emergencyName,
         emergencyContactPhone: emergencyPhone,
+        dateOfBirth: birthdate,
       });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save — try again.');
     } finally {
@@ -180,6 +193,12 @@ export default function ProfileScreen() {
               </ThemedText>
             )}
             <TextField
+              label={'Birthdate (or estimate — e.g. "Spring 2022")'}
+              value={birthdate}
+              onChangeText={setBirthdate}
+              placeholder="Unknown"
+            />
+            <TextField
               label="Medical notes"
               value={medicalNotes}
               onChangeText={setMedicalNotes}
@@ -195,6 +214,11 @@ export default function ProfileScreen() {
               keyboardType="phone-pad"
             />
             <Button label="Save" variant="secondary" onPress={handleSaveDogDetails} loading={saving} />
+            {saved && (
+              <ThemedText type="small" themeColor="success">
+                Saved.
+              </ThemedText>
+            )}
           </>
         ) : (
           <>
@@ -213,6 +237,12 @@ export default function ProfileScreen() {
             </View>
             <TextField label="Dog's name" value={newDogName} onChangeText={setNewDogName} autoCapitalize="words" />
             <TextField label="Breed" value={newDogBreed} onChangeText={setNewDogBreed} autoCapitalize="words" />
+            <TextField
+              label={'Birthdate (or estimate — e.g. "Spring 2022", optional)'}
+              value={newDogBirthdate}
+              onChangeText={setNewDogBirthdate}
+              placeholder="Unknown"
+            />
             <Button label="Add dog" onPress={handleAddDog} disabled={!newDogName.trim()} loading={saving} />
           </>
         )}

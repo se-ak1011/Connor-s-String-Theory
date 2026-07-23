@@ -179,7 +179,7 @@ create table if not exists connorst.dogs (
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
   breed text,
-  date_of_birth date,
+  date_of_birth text,
   photo_url text,
   medical_notes text,
   emergency_contact_name text,
@@ -188,6 +188,12 @@ create table if not exists connorst.dogs (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Was `date` originally — switched to free text so an owner can enter an
+-- estimate ("Spring 2022", "around 2 years old") when the exact date isn't
+-- known, not just a strict calendar date. Safe to re-run: casting text to
+-- text is a no-op once already migrated.
+alter table connorst.dogs alter column date_of_birth type text using date_of_birth::text;
 
 create or replace trigger dogs_set_updated_at
   before update on connorst.dogs
@@ -267,6 +273,19 @@ create policy "Anyone can submit an enquiry" on connorst.enquiries
 drop policy if exists "Users can read their own bookings" on connorst.bookings;
 create policy "Users can read their own bookings" on connorst.bookings
   for select using (user_id = auth.uid());
+
+-- Public bookings (submitted from the logged-out Book screen) have
+-- user_id = null, so auth.uid() = user_id above never matches for them —
+-- anon has no identity to scope a "read only your own" policy against.
+-- Without this, submitBooking()'s .insert().select() (it needs to read
+-- the row back to get its id) has no SELECT policy to satisfy at all and
+-- the whole booking silently fails, which is what broke the public
+-- booking flow. Anonymous bookings aren't sensitive in a way that scoping
+-- would meaningfully protect anyway — this mirrors the fully-open insert
+-- policy above.
+drop policy if exists "Anyone can read anonymous bookings" on connorst.bookings;
+create policy "Anyone can read anonymous bookings" on connorst.bookings
+  for select using (user_id is null);
 
 drop policy if exists "Users can cancel or amend their own pending bookings" on connorst.bookings;
 create policy "Users can cancel or amend their own pending bookings" on connorst.bookings
