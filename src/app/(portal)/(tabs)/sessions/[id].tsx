@@ -16,6 +16,7 @@ export default function SessionDetailScreen() {
   const { user } = useAuth();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -32,9 +33,12 @@ export default function SessionDetailScreen() {
   async function handleCancel() {
     if (!booking) return;
     setSubmitting(true);
+    setError(null);
     try {
       await cancelBooking(booking.id);
       await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not cancel — try again.');
     } finally {
       setSubmitting(false);
     }
@@ -95,6 +99,12 @@ export default function SessionDetailScreen() {
           </ThemedText>
           <ThemedText themeColor="textSecondary">{booking.notes}</ThemedText>
         </Card>
+      )}
+
+      {error && (
+        <ThemedText type="small" themeColor="attention">
+          {error}
+        </ThemedText>
       )}
 
       {canCancel && (

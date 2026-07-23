@@ -55,17 +55,19 @@ export async function fetchHomework(dogId: string): Promise<HomeworkAssignment[]
     .eq('dog_id', dogId)
     .order('assigned_at', { ascending: false });
 
+  if (error) console.error('[training] fetchHomework failed', error.message);
   if (error || !data) return [];
   return data.map(mapHomework);
 }
 
 export async function fetchHomeworkItem(id: string): Promise<HomeworkAssignment | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('homework_assignments')
     .select('*, exercise:exercises(*)')
     .eq('id', id)
     .maybeSingle();
 
+  if (error) console.error('[training] fetchHomeworkItem failed', error.message);
   return data ? mapHomework(data) : null;
 }
 

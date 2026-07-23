@@ -15,6 +15,7 @@ export default function TrainerSessionsScreen() {
   const [bookings, setBookings] = useState<TrainerBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -30,9 +31,12 @@ export default function TrainerSessionsScreen() {
 
   async function handleUpdateStatus(id: string, status: TrainerBooking['status']) {
     setUpdatingId(id);
+    setError(null);
     try {
       await updateBookingStatus(id, status);
       await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update that session — try again.');
     } finally {
       setUpdatingId(null);
     }
@@ -47,6 +51,11 @@ export default function TrainerSessionsScreen() {
       <View style={styles.header}>
         <BackLink label="Home" fallbackHref="/" />
         <ThemedText type="title">Sessions</ThemedText>
+        {error && (
+          <ThemedText type="small" themeColor="attention">
+            {error}
+          </ThemedText>
+        )}
       </View>
 
       <View style={styles.section}>

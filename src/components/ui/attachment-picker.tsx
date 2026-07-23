@@ -20,44 +20,58 @@ type AttachmentPickerProps = {
  */
 export function AttachmentPicker({ userId, targets, onUploaded }: AttachmentPickerProps) {
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handlePhoto() {
     setUploading(true);
+    setError(null);
     try {
       const media = await uploadPhoto(userId, targets);
       if (media) onUploaded?.(media);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not upload that photo — try again.');
     } finally {
       setUploading(false);
     }
   }
 
   return (
-    <View style={styles.row}>
-      <Pressable onPress={handlePhoto} disabled={uploading} style={styles.chip}>
-        <Ionicons name="image" size={16} color={Colors.accent} />
-        <ThemedText type="small">{uploading ? 'Uploading…' : 'Photo'}</ThemedText>
-      </Pressable>
+    <View style={styles.wrap}>
+      <View style={styles.row}>
+        <Pressable onPress={handlePhoto} disabled={uploading} style={styles.chip}>
+          <Ionicons name="image" size={16} color={Colors.accent} />
+          <ThemedText type="small">{uploading ? 'Uploading…' : 'Photo'}</ThemedText>
+        </Pressable>
 
-      <View style={styles.chip}>
-        <Ionicons name="videocam" size={16} color={Colors.textMuted} />
-        <ThemedText type="small" themeColor="textMuted">
-          Video
-        </ThemedText>
-        <ComingSoonBadge />
-      </View>
+        <View style={styles.chip}>
+          <Ionicons name="videocam" size={16} color={Colors.textMuted} />
+          <ThemedText type="small" themeColor="textMuted">
+            Video
+          </ThemedText>
+          <ComingSoonBadge />
+        </View>
 
-      <View style={styles.chip}>
-        <Ionicons name="mic" size={16} color={Colors.textMuted} />
-        <ThemedText type="small" themeColor="textMuted">
-          Voice note
-        </ThemedText>
-        <ComingSoonBadge />
+        <View style={styles.chip}>
+          <Ionicons name="mic" size={16} color={Colors.textMuted} />
+          <ThemedText type="small" themeColor="textMuted">
+            Voice note
+          </ThemedText>
+          <ComingSoonBadge />
+        </View>
       </View>
+      {error && (
+        <ThemedText type="small" themeColor="attention">
+          {error}
+        </ThemedText>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    gap: Spacing.two,
+  },
   row: {
     flexDirection: 'row',
     flexWrap: 'wrap',

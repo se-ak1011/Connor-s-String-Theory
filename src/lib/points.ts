@@ -15,8 +15,9 @@ const EMPTY_BALANCE: PointBalance = {
 };
 
 export async function fetchPointBalance(userId: string): Promise<PointBalance> {
-  const { data } = await supabase.from('point_balances').select('*').eq('user_id', userId).maybeSingle();
+  const { data, error } = await supabase.from('point_balances').select('*').eq('user_id', userId).maybeSingle();
 
+  if (error) console.error('[points] fetchPointBalance failed', error.message);
   if (!data) return EMPTY_BALANCE;
   return {
     undirectedBalance: data.undirected_balance,
@@ -38,6 +39,7 @@ export async function directPoints(amount: number, direction: 'own_dog' | 'commu
 
 export async function fetchCommunityPoolTotal(): Promise<number> {
   const { data, error } = await supabase.rpc('community_pool_total');
+  if (error) console.error('[points] fetchCommunityPoolTotal failed', error.message);
   if (error || data == null) return 0;
   return data as number;
 }

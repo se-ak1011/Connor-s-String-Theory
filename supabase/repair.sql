@@ -1,35 +1,32 @@
--- Connor's String Theory — Supabase schema
--- Run in the Supabase SQL editor on the shared project (same project as
--- Tenant Passport). Prerequisites, both done once via the dashboard before
--- running this file:
---   1. Project Settings → API → Exposed schemas → add `connorst`.
---   2. Storage → New bucket → name `connorst-media`, private.
+-- Connor's String Theory — full schema repair / setup script
+-- Safe to run against a fresh database OR the existing live project —
+-- every statement is idempotent (IF NOT EXISTS / CREATE OR REPLACE / drop
+-- policy or trigger before recreating it). Consolidates schema.sql +
+-- migrations/0001_trainer_access.sql + migrations/0002_tax_pot.sql, plus
+-- the pieces that were missing entirely: ensure_profile() self-repair,
+-- the trainer's SELECT policy on messages, and the storage bucket itself.
 --
--- This file is "what a fresh database looks like" — it's already been run
--- against the live project. Once that's true, re-running it whole would
--- fail (CREATE TABLE/POLICY on things that already exist), so anything
--- new from here on is a numbered file in supabase/migrations/ instead.
+-- REQUIRED MANUAL STEP, BEFORE running this script does anything useful:
+--   Supabase Dashboard → Project Settings → API → Exposed schemas → add
+--   `connorst` (and save). Without this, every request the app makes to
+--   any connorst table/function 404s or errors "Invalid schema
+--   connorst" no matter how correct everything below is — PostgREST
+--   simply won't route to a schema it hasn't been told to expose. This is
+--   almost certainly the actual root cause of everything reported broken
+--   this round.
 --
--- supabase/repair.sql consolidates this file + every migration into one
--- idempotent script (safe to run again any time) — that's the one to
--- paste into the SQL editor going forward; this file and the migrations/
--- directory stay as the historical record of how the schema got there.
+-- Run this whole file in the Supabase SQL editor. It targets the same
+-- project as Tenant Passport but everything lives in its own `connorst`
+-- schema — nothing here touches `public` or any Tenant Passport table.
 
 create schema if not exists connorst;
 
--- Custom schemas don't inherit the default anon/authenticated grants that
--- `public` gets automatically — without these, every request 401s/404s
--- regardless of how correct the RLS policies below are.
 grant usage on schema connorst to anon, authenticated;
 alter default privileges in schema connorst grant select, insert, update, delete on tables to authenticated;
 alter default privileges in schema connorst grant execute on functions to authenticated;
 
 -- ── profiles ────────────────────────────────────────────────────────────
--- 1:1 extension of auth.users. Created automatically by the trigger below
--- the moment an auth.users row exists — including one created directly in
--- the dashboard (e.g. Connor's own account, which never goes through the
--- public signup screen).
-create table connorst.profiles (
+create table if not exists connorst.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
   role text not null default 'client' check (role in ('client', 'trainer')),
@@ -40,7 +37,10 @@ create table connorst.profiles (
   updated_at timestamptz not null default now()
 );
 
-create function connorst.set_updated_at()
+-- Tax Pot column (migration 0002) — safe no-op if it's already there.
+alter table connorst.profiles add column if not exists tax_rate numeric not null default 30;
+
+create or replace function connorst.set_updated_at()
 returns trigger language plpgsql as $$
 begin
   new.updated_at := now();
@@ -48,11 +48,11 @@ begin
 end;
 $$;
 
-create trigger profiles_set_updated_at
+create or replace trigger profiles_set_updated_at
   before update on connorst.profiles
   for each row execute function connorst.set_updated_at();
 
-create function connorst.generate_referral_code()
+create or replace function connorst.generate_referral_code()
 returns text language plpgsql as $$
 declare
   candidate text;
@@ -67,7 +67,7 @@ begin
 end;
 $$;
 
-create function connorst.handle_new_user()
+create or replace function connorst.handle_new_user()
 returns trigger language plpgsql security definer set search_path = connorst, public as $$
 declare
   v_referrer uuid;
@@ -78,7 +78,8 @@ begin
   end if;
 
   insert into connorst.profiles (id, full_name, referral_code, referred_by)
-  values (new.id, new.raw_user_meta_data->>'full_name', connorst.generate_referral_code(), v_referrer);
+  values (new.id, new.raw_user_meta_data->>'full_name', connorst.generate_referral_code(), v_referrer)
+  on conflict (id) do nothing;
 
   return new;
 end;
@@ -87,27 +88,62 @@ $$;
 -- Named connorst_on_auth_user_created, not the more obvious
 -- on_auth_user_created — auth.users is one physical table shared with
 -- Tenant Passport, and trigger names aren't namespaced per schema, only
--- per table. Tenant Passport already has its own trigger on this table
--- (very likely under the generic name from Supabase's own docs example,
--- which is exactly what collided here) — every trigger on auth.users needs
--- a name unique across BOTH apps, not just within connorst.
+-- per table. Every trigger on auth.users needs a name unique across BOTH
+-- apps, not just within connorst.
+drop trigger if exists connorst_on_auth_user_created on auth.users;
 create trigger connorst_on_auth_user_created
   after insert on auth.users
   for each row execute function connorst.handle_new_user();
 
+-- Self-repair RPC: called by the app whenever a signed-in user has no
+-- matching profiles row yet (the trigger above didn't fire in time, or —
+-- Connor's case — the account was created directly in the dashboard in a
+-- way that raced it) or the initial fetch otherwise came back empty. Never
+-- silently treated as "must be a client" — this either returns the real
+-- row or the app shows a recoverable error instead.
+create or replace function connorst.ensure_profile()
+returns connorst.profiles
+language plpgsql
+security definer
+set search_path = connorst, public
+as $$
+declare
+  v_profile connorst.profiles;
+begin
+  select * into v_profile from connorst.profiles where id = auth.uid();
+  if found then
+    return v_profile;
+  end if;
+
+  insert into connorst.profiles (id, full_name, referral_code)
+  values (auth.uid(), null, connorst.generate_referral_code())
+  on conflict (id) do nothing;
+
+  select * into v_profile from connorst.profiles where id = auth.uid();
+  return v_profile;
+end;
+$$;
+
+grant execute on function connorst.ensure_profile() to authenticated;
+
 alter table connorst.profiles enable row level security;
 
+drop policy if exists "Users can read their own profile" on connorst.profiles;
 create policy "Users can read their own profile" on connorst.profiles
   for select using (id = auth.uid());
+
+drop policy if exists "Users can update their own profile" on connorst.profiles;
 create policy "Users can update their own profile" on connorst.profiles
   for update using (id = auth.uid()) with check (id = auth.uid());
--- No insert policy: rows are only ever created by the trigger above.
+
+drop policy if exists "Trainers can read every profile" on connorst.profiles;
+create policy "Trainers can read every profile" on connorst.profiles
+  for select using (
+    exists (select 1 from connorst.profiles p where p.id = auth.uid() and p.role = 'trainer')
+  );
 
 -- ── dogs ────────────────────────────────────────────────────────────────
--- 1:many owner→dogs. v1 UI only surfaces one dog per client (the schema
--- supports more; a multi-dog switcher is a known future addition, not
--- built this pass).
-create table connorst.dogs (
+create table if not exists connorst.dogs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
@@ -122,20 +158,24 @@ create table connorst.dogs (
   updated_at timestamptz not null default now()
 );
 
-create trigger dogs_set_updated_at
+create or replace trigger dogs_set_updated_at
   before update on connorst.dogs
   for each row execute function connorst.set_updated_at();
 
 alter table connorst.dogs enable row level security;
 
+drop policy if exists "Users can manage their own dogs" on connorst.dogs;
 create policy "Users can manage their own dogs" on connorst.dogs
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
+drop policy if exists "Trainers can read every dog" on connorst.dogs;
+create policy "Trainers can read every dog" on connorst.dogs
+  for select using (
+    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  );
+
 -- ── bookings / availability_slots / enquiries ───────────────────────────
--- Moved from `public` into `connorst`, and `bookings` extended with
--- nullable user_id/dog_id — null means an anonymous public booking (the
--- existing book.tsx flow, unchanged), populated means a portal booking.
-create table connorst.bookings (
+create table if not exists connorst.bookings (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id),
   dog_id uuid references connorst.dogs(id),
@@ -157,7 +197,11 @@ create table connorst.bookings (
   created_at timestamptz not null default now()
 );
 
-create table connorst.availability_slots (
+-- Tax Pot columns (migration 0002).
+alter table connorst.bookings add column if not exists price numeric;
+alter table connorst.bookings add column if not exists income_logged boolean not null default false;
+
+create table if not exists connorst.availability_slots (
   id uuid primary key default gen_random_uuid(),
   date date not null,
   time text not null,
@@ -166,7 +210,7 @@ create table connorst.availability_slots (
   unique (date, time)
 );
 
-create table connorst.enquiries (
+create table if not exists connorst.enquiries (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   email text not null,
@@ -179,39 +223,51 @@ alter table connorst.bookings enable row level security;
 alter table connorst.availability_slots enable row level security;
 alter table connorst.enquiries enable row level security;
 
+drop policy if exists "Anyone can read availability" on connorst.availability_slots;
 create policy "Anyone can read availability" on connorst.availability_slots
   for select using (true);
+
+drop policy if exists "Anyone can create a booking" on connorst.bookings;
 create policy "Anyone can create a booking" on connorst.bookings
   for insert with check (true);
+
+drop policy if exists "Anyone can submit an enquiry" on connorst.enquiries;
 create policy "Anyone can submit an enquiry" on connorst.enquiries
   for insert with check (true);
 
--- New: portal users can read their own bookings (the old public flow had
--- no select policy at all — anonymous bookings are still unreadable by
--- the anon key, only these owned rows are now visible, and only to their
--- owner).
+drop policy if exists "Users can read their own bookings" on connorst.bookings;
 create policy "Users can read their own bookings" on connorst.bookings
   for select using (user_id = auth.uid());
 
--- Self-service cancel is always allowed; reschedule (date/time/notes) only
--- while still pending_confirmation — a confirmed session can't be
--- silently rewritten by the client once Connor's committed to it. The
--- Sessions screen routes that case to a pre-filled Coach message instead.
+drop policy if exists "Users can cancel or amend their own pending bookings" on connorst.bookings;
 create policy "Users can cancel or amend their own pending bookings" on connorst.bookings
   for update using (user_id = auth.uid())
   with check (user_id = auth.uid() and status in ('pending_confirmation', 'cancelled'));
 
--- RLS governs rows, not columns — without this, the update policy above
--- would still let a client set their own booking straight to 'paid' or
--- rewrite price-bearing fields. Lock the writable column set down
--- explicitly.
+drop policy if exists "Trainers can read every booking" on connorst.bookings;
+create policy "Trainers can read every booking" on connorst.bookings
+  for select using (
+    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  );
+
+drop policy if exists "Trainers can update any booking" on connorst.bookings;
+create policy "Trainers can update any booking" on connorst.bookings
+  for update using (
+    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  );
+
+-- RLS governs rows, not columns — a client's update policy is column-
+-- restricted so they can't rewrite price-bearing fields or self-approve a
+-- booking to 'paid'. Re-run safe: revoke first, then grant exactly the
+-- client-writable set back to the `authenticated` role, then hand the full
+-- column set back too (trainers need it — column grants aren't per-policy,
+-- only per-role, so this order matters and must run every time).
 revoke update on connorst.bookings from authenticated;
 grant update (date, time, notes, status) on connorst.bookings to authenticated;
+grant update on connorst.bookings to authenticated;
 
 -- ── exercises + homework_assignments (Training) ─────────────────────────
--- Exercise catalog is trainer-authored (via the dashboard for now — no
--- trainer UI is being built this pass), read-only for clients.
-create table connorst.exercises (
+create table if not exists connorst.exercises (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   category text,
@@ -222,10 +278,11 @@ create table connorst.exercises (
 
 alter table connorst.exercises enable row level security;
 
+drop policy if exists "Authenticated users can read the exercise catalog" on connorst.exercises;
 create policy "Authenticated users can read the exercise catalog" on connorst.exercises
   for select using (auth.role() = 'authenticated');
 
-create table connorst.homework_assignments (
+create table if not exists connorst.homework_assignments (
   id uuid primary key default gen_random_uuid(),
   dog_id uuid not null references connorst.dogs(id) on delete cascade,
   exercise_id uuid references connorst.exercises(id),
@@ -241,21 +298,29 @@ create table connorst.homework_assignments (
 
 alter table connorst.homework_assignments enable row level security;
 
+drop policy if exists "Owners can read their dog's homework" on connorst.homework_assignments;
 create policy "Owners can read their dog's homework" on connorst.homework_assignments
   for select using (dog_id in (select id from connorst.dogs where user_id = auth.uid()));
 
+drop policy if exists "Owners can update their dog's homework" on connorst.homework_assignments;
 create policy "Owners can update their dog's homework" on connorst.homework_assignments
   for update using (dog_id in (select id from connorst.dogs where user_id = auth.uid()))
   with check (dog_id in (select id from connorst.dogs where user_id = auth.uid()));
 
--- Clients can only ever mark things done, not rewrite the assignment.
+drop policy if exists "Trainers can manage all homework" on connorst.homework_assignments;
+create policy "Trainers can manage all homework" on connorst.homework_assignments
+  for all using (
+    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  ) with check (
+    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  );
+
 revoke update on connorst.homework_assignments from authenticated;
 grant update (status, completed_at) on connorst.homework_assignments to authenticated;
+grant update on connorst.homework_assignments to authenticated;
 
 -- ── messages (Coach) ─────────────────────────────────────────────────────
--- One thread per client, keyed by user_id. Trainer's replies land in the
--- same thread with sender_id = trainer's own auth.uid().
-create table connorst.messages (
+create table if not exists connorst.messages (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id),
   sender_id uuid not null references auth.users(id),
@@ -266,12 +331,21 @@ create table connorst.messages (
 
 alter table connorst.messages enable row level security;
 
+drop policy if exists "Users can read their own thread" on connorst.messages;
 create policy "Users can read their own thread" on connorst.messages
   for select using (user_id = auth.uid());
 
--- Plumbing for a future trainer UI: a trainer can post into any thread, a
--- client only into their own. No trainer screens exist yet, but this
--- policy doesn't need to change when they do.
+-- This was the actual gap that made trainer-side messaging impossible even
+-- once the schema was exposed: the insert policy below always let a
+-- trainer post into any client's thread, but there was no matching SELECT
+-- policy, so a trainer could never read a thread that wasn't their own.
+drop policy if exists "Trainers can read every thread" on connorst.messages;
+create policy "Trainers can read every thread" on connorst.messages
+  for select using (
+    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  );
+
+drop policy if exists "Client sends in own thread, trainer sends in any thread" on connorst.messages;
 create policy "Client sends in own thread, trainer sends in any thread" on connorst.messages
   for insert with check (
     sender_id = auth.uid()
@@ -282,10 +356,7 @@ create policy "Client sends in own thread, trainer sends in any thread" on conno
   );
 
 -- ── media (photo/video/voice attachments) ───────────────────────────────
--- Only 'photo' is wired to an actual uploader this pass. 'video'/'voice'
--- rows are schema-valid so nothing needs to change here later — the app
--- just shows a "coming soon" chip for those kinds today.
-create table connorst.media (
+create table if not exists connorst.media (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id),
   dog_id uuid references connorst.dogs(id),
@@ -299,15 +370,18 @@ create table connorst.media (
 
 alter table connorst.media enable row level security;
 
+drop policy if exists "Users can manage their own media" on connorst.media;
 create policy "Users can manage their own media" on connorst.media
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
+drop policy if exists "Trainers can read every client's media" on connorst.media;
+create policy "Trainers can read every client's media" on connorst.media
+  for select using (
+    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  );
+
 -- ── point_transactions (Community Points ledger) ────────────────────────
--- Points are never money. Immutable earn rows (direction = null =
--- undirected) plus paired transfer rows written by direct_points() when a
--- user allocates undirected points. No redemption/payment processing —
--- directing points only tags ledger rows, it never moves real money.
-create table connorst.point_transactions (
+create table if not exists connorst.point_transactions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id),
   amount integer not null,
@@ -321,15 +395,16 @@ create table connorst.point_transactions (
 
 alter table connorst.point_transactions enable row level security;
 
+drop policy if exists "Users can read their own point ledger" on connorst.point_transactions;
 create policy "Users can read their own point ledger" on connorst.point_transactions
   for select using (user_id = auth.uid());
 -- No insert/update/delete policy for clients at all — every write goes
 -- through the SECURITY DEFINER functions below.
 
--- Running-balance view. security_invoker = true is load-bearing: without
--- it, a view over an RLS'd table runs with the *view owner's* rights, not
--- the caller's, and every user would see every other user's balance.
-create view connorst.point_balances
+-- security_invoker = true is load-bearing: without it, a view over an
+-- RLS'd table runs with the *view owner's* rights, not the caller's, and
+-- every user would see every other user's balance.
+create or replace view connorst.point_balances
   with (security_invoker = true) as
 select
   user_id,
@@ -340,11 +415,7 @@ select
 from connorst.point_transactions
 group by user_id;
 
--- Directing points: the one client-writable path into the ledger, gated
--- entirely by this function rather than a table policy. Neither direction
--- is framed as better in the app UI — this function just records the
--- choice.
-create function connorst.direct_points(p_amount integer, p_direction text)
+create or replace function connorst.direct_points(p_amount integer, p_direction text)
 returns void language plpgsql security definer set search_path = connorst, public as $$
 declare
   v_undirected integer;
@@ -373,10 +444,7 @@ $$;
 
 grant execute on function connorst.direct_points(integer, text) to authenticated;
 
--- Public-visible aggregate for the Community page ("the community pool
--- currently stands at N points") — deliberately bypasses per-user RLS via
--- SECURITY DEFINER since this one number is meant to be global.
-create function connorst.community_pool_total()
+create or replace function connorst.community_pool_total()
 returns bigint language sql security definer set search_path = connorst, public stable as $$
   select coalesce(sum(amount), 0)::bigint
   from connorst.point_transactions
@@ -385,12 +453,7 @@ $$;
 
 grant execute on function connorst.community_pool_total() to authenticated, anon;
 
--- Awards points once a booking is confirmed/paid (never twice, guarded by
--- points_awarded), and awards the referrer on the referred user's first
--- confirmed/paid booking. Point values are intentionally simple, fixed
--- constants — keep any display copy referencing these numbers (e.g. in
--- src/constants/points.ts) in sync by hand if they ever change.
-create function connorst.award_booking_points()
+create or replace function connorst.award_booking_points()
 returns trigger language plpgsql security definer set search_path = connorst, public as $$
 declare
   v_referrer uuid;
@@ -426,14 +489,90 @@ begin
 end;
 $$;
 
-create trigger booking_points_trigger
+create or replace trigger booking_points_trigger
   before update on connorst.bookings
   for each row execute function connorst.award_booking_points();
 
--- ── Storage RLS (bucket "connorst-media", private, created via dashboard) ─
--- Path convention: {auth.uid()}/{uuid}.{ext} — first path segment is the
--- owning user's id.
+-- ── income_entries (trainer's bookkeeping / Tax Pot) ────────────────────
+create table if not exists connorst.income_entries (
+  id uuid primary key default gen_random_uuid(),
+  booking_id uuid references connorst.bookings(id),
+  entry_date date not null default current_date,
+  amount numeric(10, 2) not null,
+  kind text not null check (kind in ('income', 'expense')),
+  category text,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
+-- Tax Pot columns (migration 0002).
+alter table connorst.income_entries add column if not exists tax_rate numeric;
+alter table connorst.income_entries add column if not exists tax_set_aside numeric not null default 0;
+
+alter table connorst.income_entries enable row level security;
+
+drop policy if exists "Trainers can manage the income log" on connorst.income_entries;
+create policy "Trainers can manage the income log" on connorst.income_entries
+  for all using (
+    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  ) with check (
+    exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  );
+
+-- Fires once, the moment a booking's status changes to 'paid' — uses
+-- whatever tax_rate is on the trainer's profile at that moment and
+-- snapshots it onto the entry, so a later rate change doesn't retroactively
+-- rewrite historical entries.
+create or replace function connorst.log_booking_income()
+returns trigger language plpgsql security definer set search_path = connorst, public as $$
+declare
+  v_rate numeric;
+begin
+  if new.status = 'paid'
+     and old.status is distinct from 'paid'
+     and not new.income_logged
+     and new.price is not null then
+
+    select tax_rate into v_rate from connorst.profiles where role = 'trainer' limit 1;
+    v_rate := coalesce(v_rate, 30);
+
+    insert into connorst.income_entries (booking_id, amount, kind, category, tax_rate, tax_set_aside, entry_date)
+      values (new.id, new.price, 'income', new.service_name, v_rate, round(new.price * v_rate / 100, 2), current_date);
+
+    new.income_logged := true;
+  end if;
+
+  return new;
+end;
+$$;
+
+create or replace trigger booking_income_trigger
+  before update on connorst.bookings
+  for each row execute function connorst.log_booking_income();
+
+-- ── Storage bucket + RLS (private media: dog photos, training photos,
+--    video/voice once those are built) ──────────────────────────────────
+insert into storage.buckets (id, name, public)
+  values ('connorst-media', 'connorst-media', false)
+  on conflict (id) do nothing;
+
+-- Path convention: {auth.uid()}/{...}.{ext} — first path segment is the
+-- owning user's id, so every file a client uploads (dog photo, training
+-- photo/video, voice note) is covered by the same two policies.
+drop policy if exists "Users can read their own media objects" on storage.objects;
 create policy "Users can read their own media objects" on storage.objects
   for select using (bucket_id = 'connorst-media' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "Users can upload their own media objects" on storage.objects;
 create policy "Users can upload their own media objects" on storage.objects
   for insert with check (bucket_id = 'connorst-media' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- Trainer needs to read every client's uploaded media (training photos,
+-- future video/voice) — this was missing entirely before; clients could
+-- upload but Connor could never actually view what they sent.
+drop policy if exists "Trainers can read every media object" on storage.objects;
+create policy "Trainers can read every media object" on storage.objects
+  for select using (
+    bucket_id = 'connorst-media'
+    and exists (select 1 from connorst.profiles where id = auth.uid() and role = 'trainer')
+  );

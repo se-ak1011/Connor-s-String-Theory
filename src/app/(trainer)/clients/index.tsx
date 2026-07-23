@@ -1,6 +1,6 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
@@ -39,24 +39,26 @@ export default function TrainerClientsScreen() {
         </Card>
       ) : (
         clients.map((client) => (
-          <Card key={client.profileId} style={styles.card}>
-            <ThemedText type="smallBold">{client.fullName ?? 'Unnamed'}</ThemedText>
-            {client.dogName ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {client.dogName}
-                {client.dogBreed ? ` — ${client.dogBreed}` : ''}
-              </ThemedText>
-            ) : (
-              <ThemedText type="small" themeColor="textMuted">
-                No dog added yet
-              </ThemedText>
-            )}
-            {client.currentFocus && (
-              <ThemedText type="small" themeColor="accent">
-                Working on: {client.currentFocus}
-              </ThemedText>
-            )}
-          </Card>
+          <Pressable key={client.profileId} onPress={() => router.push(`/clients/${client.profileId}`)}>
+            <Card style={styles.card}>
+              <ThemedText type="smallBold">{client.fullName ?? 'Unnamed'}</ThemedText>
+              {client.dogName ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {client.dogName}
+                  {client.dogBreed ? ` — ${client.dogBreed}` : ''}
+                </ThemedText>
+              ) : (
+                <ThemedText type="small" themeColor="textMuted">
+                  No dog added yet
+                </ThemedText>
+              )}
+              {client.currentFocus && (
+                <ThemedText type="small" themeColor="accent">
+                  Working on: {client.currentFocus}
+                </ThemedText>
+              )}
+            </Card>
+          </Pressable>
         ))
       )}
     </Screen>

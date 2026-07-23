@@ -85,6 +85,7 @@ export async function fetchMedia(filter: { dogId?: string; kind?: MediaItem['kin
   if (filter.kind) query = query.eq('kind', filter.kind);
 
   const { data, error } = await query;
+  if (error) console.error('[media] fetchMedia failed', error.message);
   if (error || !data) return [];
 
   const withUrls = await Promise.all(

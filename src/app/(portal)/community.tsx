@@ -18,6 +18,7 @@ export default function CommunityScreen() {
   const [balance, setBalance] = useState<PointBalance | null>(null);
   const [poolTotal, setPoolTotal] = useState(0);
   const [directing, setDirecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -35,9 +36,12 @@ export default function CommunityScreen() {
   async function handleDirect(direction: 'own_dog' | 'community') {
     if (!balance || balance.undirectedBalance <= 0) return;
     setDirecting(true);
+    setError(null);
     try {
       await directPoints(balance.undirectedBalance, direction);
       await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not direct those points — try again.');
     } finally {
       setDirecting(false);
     }
@@ -60,6 +64,12 @@ export default function CommunityScreen() {
       <Card style={styles.poolCard}>
         <PointsBadge amount={poolTotal} label="Community Points given so far" />
       </Card>
+
+      {error && (
+        <ThemedText type="small" themeColor="attention">
+          {error}
+        </ThemedText>
+      )}
 
       {balance && balance.undirectedBalance > 0 && (
         <Card style={styles.directCard}>

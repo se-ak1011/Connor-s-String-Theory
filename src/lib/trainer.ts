@@ -34,6 +34,7 @@ function mapTrainerBooking(row: any): TrainerBooking {
 
 export async function fetchAllBookings(): Promise<TrainerBooking[]> {
   const { data, error } = await supabase.from('bookings').select('*').order('date', { ascending: true });
+  if (error) console.error('[trainer] fetchAllBookings failed', error.message);
   if (error || !data) return [];
   return data.map(mapTrainerBooking);
 }
@@ -59,11 +60,13 @@ export type ClientSummary = {
 };
 
 export async function fetchAllClients(): Promise<ClientSummary[]> {
-  const [{ data: profiles, error: profilesError }, { data: dogs }] = await Promise.all([
+  const [{ data: profiles, error: profilesError }, { data: dogs, error: dogsError }] = await Promise.all([
     supabase.from('profiles').select('id, full_name, role').eq('role', 'client'),
     supabase.from('dogs').select('user_id, name, breed, current_focus'),
   ]);
 
+  if (profilesError) console.error('[trainer] fetchAllClients profiles query failed', profilesError.message);
+  if (dogsError) console.error('[trainer] fetchAllClients dogs query failed', dogsError.message);
   if (profilesError || !profiles) return [];
 
   const dogByOwner = new Map((dogs ?? []).map((d: any) => [d.user_id, d]));
@@ -78,6 +81,29 @@ export async function fetchAllClients(): Promise<ClientSummary[]> {
       currentFocus: dog?.current_focus ?? null,
     };
   });
+}
+
+/**
+ * Single-client version of fetchAllClients, for the trainer's client
+ * detail/message screen — avoids fetching every client just to find one.
+ */
+export async function fetchClientDetail(profileId: string): Promise<ClientSummary | null> {
+  const [{ data: profileRow, error: profileError }, { data: dog, error: dogError }] = await Promise.all([
+    supabase.from('profiles').select('id, full_name, role').eq('id', profileId).maybeSingle(),
+    supabase.from('dogs').select('name, breed, current_focus').eq('user_id', profileId).limit(1).maybeSingle(),
+  ]);
+
+  if (profileError) console.error('[trainer] fetchClientDetail profile query failed', profileError.message);
+  if (dogError) console.error('[trainer] fetchClientDetail dog query failed', dogError.message);
+  if (!profileRow) return null;
+
+  return {
+    profileId: profileRow.id,
+    fullName: profileRow.full_name,
+    dogName: dog?.name ?? null,
+    dogBreed: dog?.breed ?? null,
+    currentFocus: dog?.current_focus ?? null,
+  };
 }
 
 export type IncomeEntry = {
@@ -109,6 +135,7 @@ function mapIncomeEntry(row: any): IncomeEntry {
 
 export async function fetchIncomeEntries(): Promise<IncomeEntry[]> {
   const { data, error } = await supabase.from('income_entries').select('*').order('entry_date', { ascending: false });
+  if (error) console.error('[trainer] fetchIncomeEntries failed', error.message);
   if (error || !data) return [];
   return data.map(mapIncomeEntry);
 }

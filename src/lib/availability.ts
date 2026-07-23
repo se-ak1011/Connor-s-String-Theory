@@ -52,6 +52,7 @@ export async function fetchAvailability(): Promise<DayAvailability[]> {
     .gte('date', new Date().toISOString().slice(0, 10))
     .order('date', { ascending: true });
 
+  if (error) console.error('[availability] fetchAvailability failed, showing placeholder data', error.message);
   if (error || !data || data.length === 0) {
     return generateFallbackAvailability();
   }

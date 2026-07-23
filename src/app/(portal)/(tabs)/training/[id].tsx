@@ -15,6 +15,7 @@ export default function HomeworkDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<HomeworkAssignment | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setItem(await fetchHomeworkItem(id));
@@ -29,9 +30,12 @@ export default function HomeworkDetailScreen() {
   async function handleComplete() {
     if (!item) return;
     setSubmitting(true);
+    setError(null);
     try {
       await markHomeworkComplete(item.id);
       await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not mark that complete — try again.');
     } finally {
       setSubmitting(false);
     }
@@ -99,6 +103,12 @@ export default function HomeworkDetailScreen() {
           </ThemedText>
           <ThemedText themeColor="textSecondary">{item.aiSummary}</ThemedText>
         </Card>
+      )}
+
+      {error && (
+        <ThemedText type="small" themeColor="attention">
+          {error}
+        </ThemedText>
       )}
 
       {item.status === 'assigned' ? (

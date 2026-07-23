@@ -132,6 +132,7 @@ export async function fetchMyBookings(userId: string): Promise<Booking[]> {
     .eq('user_id', userId)
     .order('date', { ascending: true });
 
+  if (error) console.error('[bookings] fetchMyBookings failed', error.message);
   if (error || !data) return [];
   return data.map(mapBooking);
 }

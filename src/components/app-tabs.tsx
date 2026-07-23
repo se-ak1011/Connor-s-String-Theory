@@ -12,7 +12,11 @@ export default function AppTabs({ tabs }: { tabs: TabDef[] }) {
       iconColor={{ selected: Colors.accent, default: Colors.textMuted }}
       labelStyle={{ selected: { color: Colors.accent }, default: { color: Colors.textMuted } }}>
       {tabs.map((tab) => (
-        <NativeTabs.Trigger key={tab.name} name={tab.name}>
+        // NativeTabs applies its own automatic content-inset adjustment to
+        // each tab's first ScrollView on iOS — Screen already does its own
+        // safe-area-driven top padding, so leaving both on double-applies
+        // (or fights) the inset and clips content under the status bar.
+        <NativeTabs.Trigger key={tab.name} name={tab.name} disableAutomaticContentInsets>
           <NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>
           <NativeTabs.Trigger.Icon
             src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name={tab.icon} />}

@@ -34,7 +34,8 @@ const MEDIA_BUCKET = 'connorst-media';
  */
 async function resolvePhotoUrl(path: string | null): Promise<string | null> {
   if (!path) return null;
-  const { data } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 60 * 60 * 24 * 7);
+  const { data, error } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(path, 60 * 60 * 24 * 7);
+  if (error) console.error('[profile] resolvePhotoUrl failed', error.message);
   return data?.signedUrl ?? null;
 }
 
@@ -58,7 +59,7 @@ async function mapDog(row: any): Promise<Dog> {
  * more than one. A multi-dog switcher is a known future addition.
  */
 export async function fetchMyDog(userId: string): Promise<Dog | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('dogs')
     .select('*')
     .eq('user_id', userId)
@@ -66,6 +67,7 @@ export async function fetchMyDog(userId: string): Promise<Dog | null> {
     .limit(1)
     .maybeSingle();
 
+  if (error) console.error('[profile] fetchMyDog failed', error.message);
   return data ? mapDog(data) : null;
 }
 

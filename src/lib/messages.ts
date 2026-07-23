@@ -32,6 +32,7 @@ export async function fetchMessages(userId: string): Promise<Message[]> {
     .eq('user_id', userId)
     .order('created_at', { ascending: true });
 
+  if (error) console.error('[messages] fetchMessages failed', error.message);
   if (error || !data) return [];
   return data.map(mapMessage);
 }

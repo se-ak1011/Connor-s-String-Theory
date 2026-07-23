@@ -128,9 +128,16 @@ export default function ProfileScreen() {
 
   async function togglePref(key: keyof NotificationPrefs) {
     if (!user) return;
+    const previous = prefs;
     const next = { ...prefs, [key]: !prefs[key] };
     setPrefs(next);
-    await updateNotificationPrefs(user.id, next);
+    setError(null);
+    try {
+      await updateNotificationPrefs(user.id, next);
+    } catch (err) {
+      setPrefs(previous);
+      setError(err instanceof Error ? err.message : 'Could not save that preference — try again.');
+    }
   }
 
   async function handleShareReferral() {
