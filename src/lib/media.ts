@@ -31,9 +31,14 @@ function mapMedia(row: any, url: string | null): MediaItem {
 const BUCKET = 'connorst-media';
 // Keeps clips small enough to upload comfortably on mobile data and to not
 // blow through Storage on a free/low tier — same reasoning as photo's 0.8
-// quality compression.
-export const MAX_VIDEO_DURATION_SECONDS = 60;
+// quality compression. 15s at typical phone bitrates lands well under the
+// 50MB-per-file limit on Supabase's free plan.
+export const MAX_VIDEO_DURATION_SECONDS = 15;
 export const MAX_VOICE_DURATION_SECONDS = 120;
+// videoMaxDuration below is honored inconsistently on Android, so this is
+// the real backstop against the 50MB Supabase free-plan file limit — checked
+// before we even attempt the upload, on every kind, not just video.
+const MAX_UPLOAD_BYTES = 45 * 1024 * 1024;
 
 /**
  * Shared upload step for every media kind: pushes the file to the private
@@ -54,6 +59,11 @@ async function uploadLocalFile(
 
   const response = await fetch(uri);
   const arrayBuffer = await response.arrayBuffer();
+
+  if (arrayBuffer.byteLength > MAX_UPLOAD_BYTES) {
+    const limitMb = Math.round(MAX_UPLOAD_BYTES / (1024 * 1024));
+    throw new Error(`That file is too large to upload (over ${limitMb}MB) — try a shorter clip.`);
+  }
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)

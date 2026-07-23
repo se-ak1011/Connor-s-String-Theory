@@ -561,10 +561,15 @@ create or replace trigger booking_income_trigger
   for each row execute function connorst.log_booking_income();
 
 -- ── Storage bucket + RLS (private media: dog photos, training photos,
---    video/voice once those are built) ──────────────────────────────────
-insert into storage.buckets (id, name, public)
-  values ('connorst-media', 'connorst-media', false)
-  on conflict (id) do nothing;
+--    video, voice notes) ────────────────────────────────────────────────
+-- file_size_limit is a server-side backstop matching the app's own
+-- pre-upload check (lib/media.ts) — the client-side check keeps a bad
+-- upload from ever starting, this is what actually stops it if a request
+-- gets through anyway. 45MB, not 50MB, to stay under Supabase's free-plan
+-- per-file limit with a little headroom.
+insert into storage.buckets (id, name, public, file_size_limit)
+  values ('connorst-media', 'connorst-media', false, 47185920)
+  on conflict (id) do update set file_size_limit = excluded.file_size_limit;
 
 -- Path convention: {auth.uid()}/{...}.{ext} — first path segment is the
 -- owning user's id, so every file a client uploads (dog photo, training
