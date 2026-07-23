@@ -1,6 +1,7 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { Calendar, type DateData } from 'react-native-calendars';
 
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
@@ -8,14 +9,24 @@ import { BackLink } from '@/components/ui/back-link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { fetchAllBookings, updateBookingStatus, type TrainerBooking } from '@/lib/trainer';
+
+// Status -> dot color on the calendar, same meaning as the status text
+// already shown per-card — pending is the one that needs Connor's
+// attention, so it gets the accent color; everything else is muted.
+function dotColorFor(status: TrainerBooking['status']) {
+  if (status === 'pending_confirmation') return Colors.accent;
+  if (status === 'cancelled') return Colors.attention;
+  return Colors.textMuted;
+}
 
 export default function TrainerSessionsScreen() {
   const [bookings, setBookings] = useState<TrainerBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -42,9 +53,26 @@ export default function TrainerSessionsScreen() {
     }
   }
 
+  const markedDates = useMemo(() => {
+    const marks: Record<string, any> = {};
+    for (const booking of bookings) {
+      marks[booking.date] = { marked: true, dotColor: dotColorFor(booking.status) };
+    }
+    if (selectedDate) {
+      marks[selectedDate] = {
+        ...marks[selectedDate],
+        selected: true,
+        selectedColor: Colors.complement,
+        selectedTextColor: Colors.backgroundElement,
+      };
+    }
+    return marks;
+  }, [bookings, selectedDate]);
+
   const today = new Date().toISOString().slice(0, 10);
-  const upcoming = bookings.filter((b) => b.date >= today && b.status !== 'cancelled');
-  const past = bookings.filter((b) => b.date < today || b.status === 'cancelled');
+  const visible = selectedDate ? bookings.filter((b) => b.date === selectedDate) : bookings;
+  const upcoming = visible.filter((b) => b.date >= today && b.status !== 'cancelled');
+  const past = visible.filter((b) => b.date < today || b.status === 'cancelled');
 
   return (
     <Screen refreshing={loading} onRefresh={load}>
@@ -58,11 +86,41 @@ export default function TrainerSessionsScreen() {
         )}
       </View>
 
+      <Card style={styles.calendarCard}>
+        <Calendar
+          markedDates={markedDates}
+          onDayPress={(day: DateData) => setSelectedDate((prev) => (prev === day.dateString ? null : day.dateString))}
+          theme={{
+            calendarBackground: 'transparent',
+            dayTextColor: Colors.text,
+            monthTextColor: Colors.text,
+            textSectionTitleColor: Colors.textSecondary,
+            todayTextColor: Colors.accent,
+            arrowColor: Colors.accent,
+            textDisabledColor: Colors.textMuted,
+            selectedDayBackgroundColor: Colors.complement,
+            selectedDayTextColor: Colors.backgroundElement,
+            dotColor: Colors.accent,
+            textDayFontFamily: Fonts.sans,
+            textMonthFontFamily: Fonts.displayBold,
+            textDayHeaderFontFamily: Fonts.sansMedium,
+          }}
+        />
+      </Card>
+
+      {selectedDate && (
+        <Button label={`Showing ${selectedDate} — clear`} variant="secondary" onPress={() => setSelectedDate(null)} />
+      )}
+
       <View style={styles.section}>
         <ThemedText type="subtitle">Upcoming</ThemedText>
         {upcoming.length === 0 ? (
           <Card>
-            <EmptyState icon="calendar" title="Nothing booked" message="New bookings will show up here." />
+            <EmptyState
+              icon="calendar"
+              title="Nothing booked"
+              message={selectedDate ? 'No sessions on this day.' : 'New bookings will show up here.'}
+            />
           </Card>
         ) : (
           upcoming.map((booking) => (
@@ -150,6 +208,10 @@ function BookingCard({
 const styles = StyleSheet.create({
   header: {
     gap: Spacing.two,
+  },
+  calendarCard: {
+    padding: Spacing.two,
+    borderRadius: Radius.medium,
   },
   section: {
     gap: Spacing.two,

@@ -40,8 +40,15 @@ export default function TrainerClientsScreen() {
       ) : (
         clients.map((client) => (
           <Pressable key={client.profileId} onPress={() => router.push(`/clients/${client.profileId}`)}>
-            <Card style={styles.card}>
-              <ThemedText type="smallBold">{client.fullName ?? 'Unnamed'}</ThemedText>
+            <Card style={styles.card} highlighted={client.awaitingReply}>
+              <View style={styles.nameRow}>
+                <ThemedText type="smallBold">{client.fullName ?? 'Unnamed'}</ThemedText>
+                {client.awaitingReply && (
+                  <ThemedText type="small" themeColor="accent">
+                    Reply needed
+                  </ThemedText>
+                )}
+              </View>
               {client.dogName ? (
                 <ThemedText type="small" themeColor="textSecondary">
                   {client.dogName}
@@ -55,6 +62,12 @@ export default function TrainerClientsScreen() {
               {client.currentFocus && (
                 <ThemedText type="small" themeColor="accent">
                   Working on: {client.currentFocus}
+                </ThemedText>
+              )}
+              {client.lastMessage && (
+                <ThemedText type="small" themeColor="textMuted" numberOfLines={1}>
+                  {client.awaitingReply ? '' : 'You: '}
+                  {client.lastMessage}
                 </ThemedText>
               )}
             </Card>
@@ -71,5 +84,10 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: Spacing.half,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });

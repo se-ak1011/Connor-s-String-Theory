@@ -57,29 +57,67 @@ export type ClientSummary = {
   dogName: string | null;
   dogBreed: string | null;
   currentFocus: string | null;
+  lastMessage: string | null;
+  lastMessageAt: string | null;
+  // True when the client's own message is the latest in the thread —
+  // i.e. it's still awaiting a reply from Connor. Drives the "needs a
+  // reply" sort/highlight on the Clients list, since there's no separate
+  // messages inbox — this list has to double as one.
+  awaitingReply: boolean;
 };
 
 export async function fetchAllClients(): Promise<ClientSummary[]> {
-  const [{ data: profiles, error: profilesError }, { data: dogs, error: dogsError }] = await Promise.all([
-    supabase.from('profiles').select('id, full_name, role').eq('role', 'client'),
-    supabase.from('dogs').select('user_id, name, breed, current_focus'),
-  ]);
+  const [{ data: profiles, error: profilesError }, { data: dogs, error: dogsError }, { data: messages, error: messagesError }] =
+    await Promise.all([
+      supabase.from('profiles').select('id, full_name, role').eq('role', 'client'),
+      supabase.from('dogs').select('user_id, name, breed, current_focus'),
+      supabase.from('messages').select('user_id, sender_id, body, created_at').order('created_at', { ascending: false }),
+    ]);
 
   if (profilesError) console.error('[trainer] fetchAllClients profiles query failed', profilesError.message);
   if (dogsError) console.error('[trainer] fetchAllClients dogs query failed', dogsError.message);
+  if (messagesError) console.error('[trainer] fetchAllClients messages query failed', messagesError.message);
   if (profilesError || !profiles) return [];
 
   const dogByOwner = new Map((dogs ?? []).map((d: any) => [d.user_id, d]));
 
-  return profiles.map((p: any) => {
+  // Rows are already ordered newest-first, so the first one seen per
+  // user_id is that thread's latest message.
+  const latestMessageByClient = new Map<string, { body: string; createdAt: string; fromClient: boolean }>();
+  for (const m of messages ?? []) {
+    if (!latestMessageByClient.has(m.user_id)) {
+      latestMessageByClient.set(m.user_id, {
+        body: m.body,
+        createdAt: m.created_at,
+        fromClient: m.sender_id === m.user_id,
+      });
+    }
+  }
+
+  const summaries = profiles.map((p: any) => {
     const dog = dogByOwner.get(p.id);
+    const lastMessage = latestMessageByClient.get(p.id);
     return {
       profileId: p.id,
       fullName: p.full_name,
       dogName: dog?.name ?? null,
       dogBreed: dog?.breed ?? null,
       currentFocus: dog?.current_focus ?? null,
+      lastMessage: lastMessage?.body ?? null,
+      lastMessageAt: lastMessage?.createdAt ?? null,
+      awaitingReply: lastMessage?.fromClient ?? false,
     };
+  });
+
+  // Clients waiting on a reply first, then most recently active, then
+  // everyone else — so anything needing Connor's attention surfaces at
+  // the top without a separate messages inbox.
+  return summaries.sort((a, b) => {
+    if (a.awaitingReply !== b.awaitingReply) return a.awaitingReply ? -1 : 1;
+    if (a.lastMessageAt && b.lastMessageAt) return b.lastMessageAt.localeCompare(a.lastMessageAt);
+    if (a.lastMessageAt) return -1;
+    if (b.lastMessageAt) return 1;
+    return (a.fullName ?? '').localeCompare(b.fullName ?? '');
   });
 }
 
@@ -103,6 +141,10 @@ export async function fetchClientDetail(profileId: string): Promise<ClientSummar
     dogName: dog?.name ?? null,
     dogBreed: dog?.breed ?? null,
     currentFocus: dog?.current_focus ?? null,
+    // Not needed on the detail screen — it fetches the full thread itself.
+    lastMessage: null,
+    lastMessageAt: null,
+    awaitingReply: false,
   };
 }
 
