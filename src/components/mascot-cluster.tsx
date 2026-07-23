@@ -22,7 +22,7 @@ import { Colors, Radius, Spacing } from '@/constants/theme';
  * The Home hero: just Pickles, tappable. No haptic — the only signal that
  * he's interactive is a soft pulse ring that loops until the first tap,
  * then stops for good. Pressing him doesn't move him; he just idly
- * breathes. When `chips` are provided, a tap fans up to three destination
+ * breathes. When `chips` are provided, a tap fans up to four destination
  * chips out around him in a ring (tapping again, a chip, or outside hides
  * them). Ported from the companion pattern used in Hassle/Alchono.
  *
@@ -39,10 +39,13 @@ export type ClusterChip = {
 type MascotClusterProps = {
   mascotSource?: ImageProps['source'];
   chips?: ClusterChip[];
+  // Overrides the default 380 max width — used where the character is the
+  // only thing on the page (trainer Home) and can afford to sit larger.
+  size?: number;
 };
 
 // Evenly spaced around an ellipse, starting at 12 o'clock and going
-// clockwise. Capped at 3 chips here, so this always lands on the
+// clockwise. Capped at 4 chips here, so this always lands on the
 // generic branch (no hand-tuned per-count layouts needed).
 function slotFor(index: number, count: number) {
   const angle = -Math.PI / 2 + (index * 2 * Math.PI) / Math.max(count, 1);
@@ -52,7 +55,7 @@ function slotFor(index: number, count: number) {
 const RADIUS_X = 100;
 const RADIUS_Y = 125;
 
-export function MascotCluster({ mascotSource, chips }: MascotClusterProps) {
+export function MascotCluster({ mascotSource, chips, size }: MascotClusterProps) {
   const reducedMotion = useReducedMotion();
   const breathe = useSharedValue(0);
   const progress = useSharedValue(0);
@@ -96,13 +99,13 @@ export function MascotCluster({ mascotSource, chips }: MascotClusterProps) {
   const showTapPulse = !reducedMotion && !hasOpened && !open;
 
   return (
-    <View style={styles.cluster}>
+    <View style={[styles.cluster, size ? { maxWidth: size } : null]}>
       {open && <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)} />}
 
       <View style={styles.characterWrap} pointerEvents="box-none">
         {showTapPulse && <Animated.View pointerEvents="none" style={[styles.tapPulse, pulseStyle]} />}
 
-        {chips?.slice(0, 3).map((chip, index, arr) => (
+        {chips?.slice(0, 4).map((chip, index, arr) => (
           <Chip
             key={chip.label}
             chip={chip}
